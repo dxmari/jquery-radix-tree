@@ -1,0 +1,18 @@
+{
+  "name": "jm-dashboard",
+  "version": "1.0.0",
+  "description": "Radix Tree UI with jQuery",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "mocha ./tree.mocha.test.mjs"
+  },
+  "devDependencies": {
+    "chai": "^5.2.0",
+    "jsdom": "^22.1.0",
+    "mocha": "^11.7.0"
+  },
+  "dependencies": {
+    "jquery": "^3.7.1"
+  }
+}
