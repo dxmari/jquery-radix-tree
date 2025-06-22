@@ -89,6 +89,14 @@
     }
   ];
 
+  // Global instance counter for unique tree instance IDs
+  let radixTreeInstanceCounter = 0;
+
+  // Helper: generate a random string for extra uniqueness
+  function randomString(len = 6) {
+    return Math.random().toString(36).substr(2, len);
+  }
+
   // Helper: set checked state recursively for node and children
   function setCheckedRecursive(node, checked) {
     node.checked = checked;
@@ -115,21 +123,20 @@
     }
   }
 
-  // Helper: generate unique id for each checkbox
-  let checkboxIdCounter = 0;
-  function generateCheckboxId(path) {
-    return 'radix-tree-checkbox-' + path.join('-') + '-' + (checkboxIdCounter++);
+  // Helper: generate unique id for each checkbox (now with idPrefix)
+  function generateCheckboxId(path, idPrefix, checkboxIdCounter) {
+    return idPrefix + '-checkbox-' + path.join('-') + '-' + (checkboxIdCounter++);
   }
 
-  // Helper: build id->node map
-  function buildIdNodeMap(data, path = [], map = {}, parentId = null) {
+  // Helper: build id->node map (now with idPrefix)
+  function buildIdNodeMap(data, path = [], map = {}, parentId = null, idPrefix = '', checkboxIdCounter = { val: 0 }) {
     data.forEach((node, idx) => {
-      const id = 'radix-tree-checkbox-' + [...path, idx].join('-');
+      const id = idPrefix + '-checkbox-' + [...path, idx].join('-') + '-' + (checkboxIdCounter.val++);
       node._radixId = id;
       node._radixParentId = parentId;
       map[id] = node;
       if (node.children && node.children.length) {
-        buildIdNodeMap(node.children, [...path, idx], map, id);
+        buildIdNodeMap(node.children, [...path, idx], map, id, idPrefix, checkboxIdCounter);
       }
     });
     return map;
@@ -179,9 +186,11 @@
         node._page = 2;
         if ($container && $container.length) {
           $container.empty();
-          buildIdNodeMap(settings.data); // update ids
+          const idPrefix = $container.data('radixTreeIdPrefix');
+          const checkboxIdCounter = { val: 0 };
+          const idNodeMap = buildIdNodeMap(settings.data, [], {}, null, idPrefix, checkboxIdCounter);
           const $treeWrapper = $('<div class="radix-tree"></div>');
-          $treeWrapper.append(renderTree(settings.data, callbacks, null, [], settings, {}, $container));
+          $treeWrapper.append(renderTree(settings.data, callbacks, null, [], settings, idNodeMap, $container, false, idPrefix, checkboxIdCounter));
           $container.append($treeWrapper);
         }
       }, {
@@ -197,7 +206,7 @@
   }
 
   // Render function with checkboxes, unique ids, keyboard navigation, lazy loading, badges/tags, and infinite scroll
-  function renderTree(data, callbacks, parentNode = null, path = [], settings = {}, idNodeMap = {}, $container, parentDisabled = false) {
+  function renderTree(data, callbacks, parentNode = null, path = [], settings = {}, idNodeMap = {}, $container, parentDisabled = false, idPrefix = '', checkboxIdCounter = { val: 0 }) {
     const rowHeight = 32; // px, approximate height of a row (used for scroll container and last <li> padding)
     const ul = document.createElement('ul');
     ul.className = 'tree';
@@ -252,9 +261,11 @@
                     } else {
                       // Fallback: re-render whole tree
                       $container.empty();
-                      buildIdNodeMap(settings.data); // update ids
+                      const idPrefix = $container.data('radixTreeIdPrefix');
+                      const checkboxIdCounter = { val: 0 };
+                      const idNodeMap = buildIdNodeMap(settings.data, [], {}, null, idPrefix, checkboxIdCounter);
                       const $treeWrapper = $('<div class="radix-tree"></div>');
-                      $treeWrapper.append(renderTree(settings.data, callbacks, null, [], settings, {}, $container));
+                      $treeWrapper.append(renderTree(settings.data, callbacks, null, [], settings, idNodeMap, $container, false, idPrefix, checkboxIdCounter));
                       $container.append($treeWrapper);
                     }
                   }
@@ -282,8 +293,9 @@
       // Propagate disabled state from parent
       const isDisabled = !!node.disabled || !!parentDisabled;
       // Checkbox with unique id
-      const checkboxId = generateCheckboxId([...path, idx]);
-      node._radixId = 'radix-tree-checkbox-' + [...path, idx].join('-');
+      const checkboxId = generateCheckboxId([...path, idx], idPrefix, checkboxIdCounter.val);
+      checkboxIdCounter.val++;
+      node._radixId = idPrefix + '-checkbox-' + [...path, idx].join('-') + '-' + (checkboxIdCounter.val - 1);
       idNodeMap[node._radixId] = node;
       // Checkbox (visually hidden, accessible)
       const checkbox = document.createElement('input');
@@ -319,10 +331,12 @@
         let $container = $('.radix-tree-parent');
         if ($container.length) {
           const settings = $container.data('radixTreeSettings');
+          const idPrefix = $container.data('radixTreeIdPrefix');
+          const checkboxIdCounter = { val: 0 };
           $container.empty();
-          buildIdNodeMap(settings.data); // update ids
+          const idNodeMap = buildIdNodeMap(settings.data, [], {}, null, idPrefix, checkboxIdCounter);
           const $treeWrapper = $('<div class="radix-tree"></div>');
-          $treeWrapper.append(renderTree(settings.data, callbacks, null, [], settings, {}, $container));
+          $treeWrapper.append(renderTree(settings.data, settings.callbacks, null, [], settings, idNodeMap, $container, false, idPrefix, checkboxIdCounter));
           $container.append($treeWrapper);
         }
         callbacks.onCheck && callbacks.onCheck(node, checkbox);
@@ -452,10 +466,12 @@
               // Always use the root container for re-rendering
               let $container = $('.radix-tree-parent');
               if ($container.length) {
+                const idPrefix = $container.data('radixTreeIdPrefix');
+                const checkboxIdCounter = { val: 0 };
+                const idNodeMap = buildIdNodeMap(settings.data, [], {}, null, idPrefix, checkboxIdCounter);
                 $container.empty();
-                buildIdNodeMap(settings.data); // update ids
                 const $treeWrapper = $('<div class="radix-tree"></div>');
-                $treeWrapper.append(renderTree(settings.data, callbacks, null, [], settings, {}, $container));
+                $treeWrapper.append(renderTree(settings.data, callbacks, null, [], settings, idNodeMap, $container, false, idPrefix, checkboxIdCounter));
                 $container.append($treeWrapper);
               }
               settings.lazyLoad(node, function (children, hasMore) {
@@ -466,9 +482,11 @@
                 node._page = 2;
                 if ($container.length) {
                   $container.empty();
-                  buildIdNodeMap(settings.data); // update ids
+                  const idPrefix = $container.data('radixTreeIdPrefix');
+                  const checkboxIdCounter = { val: 0 };
+                  const idNodeMap = buildIdNodeMap(settings.data, [], {}, null, idPrefix, checkboxIdCounter);
                   const $treeWrapper = $('<div class="radix-tree"></div>');
-                  $treeWrapper.append(renderTree(settings.data, callbacks, null, [], settings, {}, $container));
+                  $treeWrapper.append(renderTree(settings.data, callbacks, null, [], settings, idNodeMap, $container, false, idPrefix, checkboxIdCounter));
                   $container.append($treeWrapper);
                 }
               }, {
@@ -499,7 +517,9 @@
             settings,
             idNodeMap,
             $container,
-            isDisabled // propagate disabled state
+            isDisabled, // propagate disabled state
+            idPrefix,
+            checkboxIdCounter
           ));
         }
         li.appendChild(details);
@@ -600,9 +620,11 @@
             }
             updateParents(node);
             $container.empty();
-            buildIdNodeMap(settings.data); // update ids
+            const idPrefix = $container.data('radixTreeIdPrefix');
+            const checkboxIdCounter = { val: 0 };
+            const idNodeMap = buildIdNodeMap(settings.data, [], {}, null, idPrefix, checkboxIdCounter);
             const $treeWrapper = $('<div class="radix-tree"></div>');
-            $treeWrapper.append(renderTree(settings.data, settings.callbacks, null, [], settings, {}, $container));
+            $treeWrapper.append(renderTree(settings.data, settings.callbacks, null, [], settings, idNodeMap, $container, false, idPrefix, checkboxIdCounter));
             $container.append($treeWrapper);
           }
           return;
@@ -613,9 +635,11 @@
           if (node) {
             node.open = true;
             $container.empty();
-            buildIdNodeMap(settings.data); // update ids
+            const idPrefix = $container.data('radixTreeIdPrefix');
+            const checkboxIdCounter = { val: 0 };
+            const idNodeMap = buildIdNodeMap(settings.data, [], {}, null, idPrefix, checkboxIdCounter);
             const $treeWrapper = $('<div class="radix-tree"></div>');
-            $treeWrapper.append(renderTree(settings.data, settings.callbacks, null, [], settings, {}, $container));
+            $treeWrapper.append(renderTree(settings.data, settings.callbacks, null, [], settings, idNodeMap, $container, false, idPrefix, checkboxIdCounter));
             $container.append($treeWrapper);
           }
           return;
@@ -626,9 +650,11 @@
           if (node) {
             node.open = false;
             $container.empty();
-            buildIdNodeMap(settings.data); // update ids
+            const idPrefix = $container.data('radixTreeIdPrefix');
+            const checkboxIdCounter = { val: 0 };
+            const idNodeMap = buildIdNodeMap(settings.data, [], {}, null, idPrefix, checkboxIdCounter);
             const $treeWrapper = $('<div class="radix-tree"></div>');
-            $treeWrapper.append(renderTree(settings.data, settings.callbacks, null, [], settings, {}, $container));
+            $treeWrapper.append(renderTree(settings.data, settings.callbacks, null, [], settings, idNodeMap, $container, false, idPrefix, checkboxIdCounter));
             $container.append($treeWrapper);
           }
           return;
@@ -639,9 +665,11 @@
           const [newData] = args;
           settings.data = newData;
           $container.empty();
-          buildIdNodeMap(settings.data); // update ids
+          const idPrefix = $container.data('radixTreeIdPrefix');
+          const checkboxIdCounter = { val: 0 };
+          const idNodeMap = buildIdNodeMap(settings.data, [], {}, null, idPrefix, checkboxIdCounter);
           const $treeWrapper = $('<div class="radix-tree"></div>');
-          $treeWrapper.append(renderTree(settings.data, settings.callbacks, null, [], settings, {}, $container));
+          $treeWrapper.append(renderTree(settings.data, settings.callbacks, null, [], settings, idNodeMap, $container, false, idPrefix, checkboxIdCounter));
           $container.append($treeWrapper);
           return;
         }
@@ -780,15 +808,22 @@
         $container.addClass(settings.rootClassName);
       }
       $container.data('radixTreeSettings', settings); // Store settings for rerender
-      checkboxIdCounter = 0; // Reset counter for each render
-      const idNodeMap = buildIdNodeMap(settings.data); // Ensure _radixId is set
+      // Assign a unique idPrefix for this tree instance
+      if (typeof $container.data('radixTreeIdPrefix') === 'undefined') {
+        const instanceId = ++radixTreeInstanceCounter;
+        const rand = randomString(6);
+        $container.data('radixTreeIdPrefix', 'radix-tree-' + instanceId + '-' + rand);
+      }
+      const idPrefix = $container.data('radixTreeIdPrefix');
+      const checkboxIdCounter = { val: 0 };
+      const idNodeMap = buildIdNodeMap(settings.data, [], {}, null, idPrefix, checkboxIdCounter);
       // Trigger initial lazy load for open nodes
       settings.data.forEach((node, idx) => {
         triggerInitialLazyLoad(node, settings, settings.callbacks, [idx], idNodeMap, $container);
       });
       // Wrap the tree in a parent div.radix-tree
       const $treeWrapper = $('<div class="radix-tree"></div>');
-      $treeWrapper.append(renderTree(settings.data, settings.callbacks, null, [], settings, idNodeMap, $container));
+      $treeWrapper.append(renderTree(settings.data, settings.callbacks, null, [], settings, idNodeMap, $container, false, idPrefix, checkboxIdCounter));
       $container.append($treeWrapper);
     });
   };

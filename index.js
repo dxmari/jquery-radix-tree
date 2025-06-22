@@ -1,161 +1,114 @@
-const data = [
-  {
-    label: 'Universe',
-    open: true,
-    checked: false,
-    children: [
-      {
-        label: 'Galaxies',
-        open: true,
-        checked: false,
-        children: [
-          {
-            label: 'Milky Way',
-            open: false,
-            checked: false,
-            children: [
-              {
-                label: 'Solar System',
-                open: false,
-                checked: false,
-                children: [
-                  {
-                    label: 'Planets',
-                    open: false,
-                    checked: false,
-                    lazy: true // Lazy load planets
-                  },
-                  {
-                    label: 'Asteroid Belt',
-                    open: false,
-                    checked: false,
-                    lazy: true // Lazy load asteroids
-                  }
-                ]
-              },
-              {
-                label: 'Alpha Centauri System',
-                open: false,
-                checked: false,
-                lazy: true // Lazy load Alpha Centauri stars
-              }
-            ]
-          },
-          {
-            label: 'Andromeda',
-            open: false,
-            checked: false,
-            lazy: true // Lazy load Andromeda star systems
-          }
-        ]
-      },
-      {
-        label: 'Black Holes',
-        open: false,
-        checked: false,
-        children: [
-          { label: 'Supermassive', open: false, checked: false, lazy: true },
-          { label: 'Stellar-mass', open: false, checked: false, lazy: true }
-        ]
-      },
-      {
-        label: 'Nebulae',
-        open: false,
-        checked: false,
-        lazy: true // Lazy load nebulae
-      }
-    ]
-  },
-  {
-    label: 'Multiverse',
-    open: false,
-    checked: false,
-    children: [
-      { label: 'Parallel Universe 1', checked: false, lazy: true },
-      { label: 'Parallel Universe 2', open: false, checked: false, lazy: true }
-    ]
-  }
-];
+// Entry for Radix Tree landing page demo (Nice Select style)
+// Handles demo rendering, code copy, and (if needed) tab logic
 
-// Initial data with lazy nodes
-const initialData = [
-  {
-    label: 'Projects',
-    open: true,
-    checked: false,
-    children: [
-      {
-        label: 'Frontend',
-        lazy: true // Will load children on demand
-      },
-      {
-        label: 'Backend',
-        lazy: true
-      }
-    ]
-  }
-];
-
-const newData = [
-  {
-    label: 'Company',
-    open: true,
-    checked: false,
-    children: [
-      {
-        label: 'HR',
-        lazy: true
-      },
-      {
-        label: 'Engineering',
-        lazy: true
-      }
-    ]
-  }
-];
-
-// Custom lazyLoad function
-function myLazyLoad(node, done) {
-  setTimeout(function () {
-    if (node.label === 'Frontend') {
-      done([
-        { label: 'React', checked: false },
-        { label: 'Vue', checked: false }
-      ]);
-    } else if (node.label === 'Backend') {
-      done([
-        { label: 'Node.js', checked: false, lazy: true },
-        { label: 'Python', checked: false }
-      ]);
-    } else if (node.label === 'Node.js') {
-      done([
-        { label: 'Express', checked: false },
-        { label: 'NestJS', checked: false }
-      ]);
-    } else {
-      done([{ label: 'No data', checked: false }]);
+// --- Demo Data and Renderers ---
+window.radixDemoData = {
+  basic: [
+    {
+      label: 'Universe',
+      open: true,
+      children: [
+        { label: 'Galaxies', children: [ { label: 'Milky Way' }, { label: 'Andromeda' } ] },
+        { label: 'Black Holes' }
+      ]
     }
-  }, 1000); // Simulate async delay
-}
+  ],
+  badges: [
+    {
+      label: 'Projects',
+      badge: 2,
+      tags: ['active'],
+      children: [
+        { label: 'Frontend', badge: 'New', tags: ['UI', 'urgent'], lazy: true },
+        { label: 'Backend', badge: 5, tags: ['API'], lazy: true }
+      ]
+    }
+  ],
+  disabled: [
+    {
+      label: 'Root',
+      open: true,
+      children: [
+        { label: 'Enabled Node' },
+        {
+          label: 'Disabled Subtree',
+          disabled: true,
+          children: [
+            { label: 'Child 1' },
+            { label: 'Child 2', children: [{ label: 'Grandchild 1' }] }
+          ]
+        }
+      ]
+    }
+  ]
+};
 
-$(document).ready(() => {
-  console.log('Init');
+window.renderRadixDemo = function(selector, data, opts) {
+  $(selector).empty().append('<div class="example"></div>');
+  $('.example', selector).radixTree(Object.assign({ data }, opts || {}));
+};
 
+// --- Copy Code Logic ---
+window.copyCode = function (id) {
+  const code = document.querySelector('#' + id + ' pre code').innerText;
+  navigator.clipboard.writeText(code);
+  const btn = document.querySelector('#' + id + ' .copy-btn');
+  btn.innerText = 'Copied!';
+  setTimeout(() => { btn.innerText = 'Copy'; }, 1200);
+};
+
+// --- (Optional) Tab Logic ---
+window.initRadixTabs = function() {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+};
+
+// --- On DOM Ready ---
+$(function () {
+  // Basic Example
+  window.renderRadixDemo('#demo-basic', window.radixDemoData.basic);
+
+  // Lazy Loading Example
+  function myLazyLoad(node, done, delay) {
+    setTimeout(() => {
+      if (node.label === 'Galaxies') {
+        done([{ label: 'Milky Way' }, { label: 'Andromeda' }]);
+      } else {
+        done([{ label: 'No data' }]);
+      }
+    }, delay);
+  }
+  $('#demo-lazy').empty().append('<div class="radix-tree"></div>');
+  $('.radix-tree', '#demo-lazy').radixTree({
+    data: [{ label: 'Galaxies', lazy: true }],
+    lazyLoad: myLazyLoad,
+    lazyLoadDelay: 1200
+  });
+
+  // Badges & Tags Example
+  window.renderRadixDemo('#demo-badges', window.radixDemoData.badges);
+
+  // Infinite Scroll Example
   const demoData = [
     {
       label: 'Big Folder',
-      open: false,
-      infinite: true, // enables infinite scroll for this node
-      lazy: true,     // triggers lazyLoad for paging
+      open: true,
+      infinite: true,
+      lazy: true,
       badge: 100,
       tags: ['infinite', 'files']
     }
   ];
-  
   function infiniteLazyLoad(node, done, opts, delay) {
     const total = 100;
     const page = opts && opts.page ? opts.page : 1;
-    const pageSize = opts && opts.pageSize ? opts.pageSize : 20; // Controlled by pageSize option
+    const pageSize = opts && opts.pageSize ? opts.pageSize : 20;
     const start = (page - 1) * pageSize;
     const end = Math.min(start + pageSize, total);
     const children = [];
@@ -167,110 +120,21 @@ $(document).ready(() => {
       });
     }
     setTimeout(() => {
-      done(children, end < total); // hasMore = true if more pages
-    }, delay); // Use the dynamic delay
+      done(children, end < total);
+    }, delay);
   }
-  
-  // Example 1: Large page size (pagination and scroll enabled)
-  $('.radix-tree-large').radixTree({
-    data: demoData,
-    lazyLoad: infiniteLazyLoad,
-    pageSize: 20,        // Pagination and scroll enabled (>= 10)
-    lazyLoadDelay: 500   // Delay for each page load
-  });
-  
-  // Example 2: Small page size (no pagination or scroll)
-  $('.radix-tree-small').radixTree({
-    data: demoData,
-    lazyLoad: infiniteLazyLoad,
-    pageSize: 5,         // No pagination or scroll (< 10)
-    lazyLoadDelay: 800
-  });
-
-  // --- Basic Demo ---
-  $('#demo-basic').empty().radixTree({
-    data
-  });
-
-  // --- Lazy Loading Demo ---
-  function myLazyLoad(node, done, delay) {
-    setTimeout(() => {
-      if (node.label === 'Galaxies') {
-        done([{ label: 'Milky Way' }, { label: 'Andromeda' }]);
-      } else {
-        done([{ label: 'No data' }]);
-      }
-    }, 1200);
-  }
-  $('#demo-lazy').empty().radixTree({
-    data: [{ label: 'Galaxies', lazy: true }],
-    lazyLoad: myLazyLoad,
-    lazyLoadDelay: 1200
-  });
-
-  // --- Badges & Tags Demo ---
-  const dataWithBadgesAndTags = [
-    {
-      label: 'Projects',
-      open: true,
-      badge: 2,
-      tags: ['active'],
-      children: [
-        { label: 'Frontend', badge: 'New', tags: ['UI', 'urgent'], lazy: true },
-        { label: 'Backend', badge: 5, tags: ['API'], lazy: true }
-      ]
-    },
-    { label: 'Inbox', badge: 12, tags: ['unread', 'priority'] },
-    { label: 'Archive', tags: ['old'] }
-  ];
-  $('#demo-badges').empty().radixTree({
-    data: dataWithBadgesAndTags
-  });
-
-  // --- Infinite Scroll Demo ---
-  $('#demo-infinite').empty().radixTree({
+  $('#demo-infinite').empty().append('<div class="radix-tree-small"></div>');
+  $('.radix-tree-small', '#demo-infinite').radixTree({
     data: demoData,
     lazyLoad: infiniteLazyLoad,
     pageSize: 5,
-    paginateThreshold: 5,
     lazyLoadDelay: 800
   });
 
-  // --- Disabled Nodes Demo ---
-  const disabledData = [
-    {
-      label: 'Root',
-      open: true,
-      children: [
-        { label: 'Enabled Node' },
-        {
-          label: 'Disabled Subtree',
-          disabled: true,
-          children: [
-            { label: 'Child 1' },
-            { label: 'Child 2', children: [ { label: 'Grandchild 1' } ] }
-          ]
-        }
-      ]
-    }
-  ];
-  $('#demo-disabled').empty().radixTree({
-    data: disabledData
-  });
+  // Disabled Nodes Example
+  window.renderRadixDemo('#demo-disabled', window.radixDemoData.disabled);
 
-  // --- Command API Demo ---
-  const apiData = [
-    {
-      label: 'Fruits',
-      open: true,
-      children: [
-        { label: 'Apple', checked: true },
-        { label: 'Banana' },
-        { label: 'Citrus', children: [{ label: 'Orange' }, { label: 'Lemon', checked: true }] }
-      ]
-    }
-  ];
-  $('#demo-api').empty().radixTree({
-    data: apiData
-  });
+  // Command API Example
+  // For demo, show a tree and expose API via window for console testing
+  window.renderRadixDemo('#demo-api', window.radixDemoData.basic);
 });

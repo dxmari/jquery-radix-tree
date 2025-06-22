@@ -1,17 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document</title>
-  <script src="https://code.jquery.com/jquery-3.7.1.slim.min.js" integrity="sha256-kmHvs0B+OpCW5GVHUNjv9rOmY0IvSIRcf7zGUDTDQM8=" crossorigin="anonymous"></script>
+  <script src="https://code.jquery.com/jquery-3.7.1.slim.min.js"
+    integrity="sha256-kmHvs0B+OpCW5GVHUNjv9rOmY0IvSIRcf7zGUDTDQM8=" crossorigin="anonymous"></script>
   <script src="tree.js"></script>
-  <script src="index.js"></script>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="tree.css">
 </head>
+
 <body>
   <div class="demo-tree"></div>
   <div class="radix-tree-small"></div>
   <div class="radix-tree-large"></div>
+  <script>
+    $(document).ready(() => {
+      console.log('Init');
+
+      const demoData = [
+        {
+          label: 'Big Folder',
+          open: false,
+          infinite: true, // enables infinite scroll for this node
+          lazy: true,     // triggers lazyLoad for paging
+          badge: 100,
+          tags: ['infinite', 'files']
+        }
+      ];
+
+      function infiniteLazyLoad(node, done, opts, delay) {
+        const total = 100;
+        const page = opts && opts.page ? opts.page : 1;
+        const pageSize = opts && opts.pageSize ? opts.pageSize : 20; // Controlled by pageSize option
+        const start = (page - 1) * pageSize;
+        const end = Math.min(start + pageSize, total);
+        const children = [];
+        for (let i = start; i < end; i++) {
+          children.push({
+            label: 'File ' + (i + 1),
+            badge: (i % 2 === 0) ? 'even' : 'odd',
+            tags: (i % 10 === 0) ? ['milestone'] : []
+          });
+        }
+        setTimeout(() => {
+          done(children, end < total); // hasMore = true if more pages
+        }, delay); // Use the dynamic delay
+      }
+
+      // Example 1: Large page size (pagination and scroll enabled)
+      $('.radix-tree-large').radixTree({
+        data: demoData,
+        lazyLoad: infiniteLazyLoad,
+        pageSize: 20,        // Pagination and scroll enabled (>= 10)
+        lazyLoadDelay: 500   // Delay for each page load
+      });
+
+      // Example 2: Small page size (no pagination or scroll)
+      $('.radix-tree-small').radixTree({
+        data: demoData,
+        lazyLoad: infiniteLazyLoad,
+        pageSize: 5,         // No pagination or scroll (< 10)
+        lazyLoadDelay: 800
+      });
+    });
+  </script>
 </body>
+
 </html>
