@@ -205,3 +205,117 @@ html {
 .radix-tree label:focus, .radix-tree label:hover {
   background: var(--grey);
 }
+
+body {
+  background: #f6f8fa;
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+  color: #222;
+  margin: 0;
+  min-height: 100vh;
+}
+
+.main-content {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2.5em 1em 3em 1em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.section-title {
+  font-size: 2em;
+  font-weight: 700;
+  margin: 2em 0 1.5em 0;
+  color: #2e7d32;
+  letter-spacing: 0.01em;
+  text-align: center;
+}
+
+.demo-card {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 2px 16px rgba(60,60,60,0.10);
+  margin: 2.5em auto 2.5em auto;
+  max-width: 600px;
+  width: 100%;
+  padding: 2em 1.5em 1.5em 1.5em;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: box-shadow 0.2s;
+}
+.demo-card:hover {
+  box-shadow: 0 4px 24px rgba(60,60,60,0.13);
+}
+.demo-card h3 {
+  margin-top: 0;
+  color: #388e3c;
+  font-size: 1.3em;
+  font-weight: 600;
+  margin-bottom: 1.2em;
+  letter-spacing: 0.01em;
+}
+.demo-card .demo-tree {
+  margin-bottom: 1.2em;
+  width: 100%;
+  min-height: 60px;
+  display: flex;
+  justify-content: center;
+}
+.demo-card .code-block {
+  width: 100%;
+  margin: 0;
+  box-sizing: border-box;
+  position: relative;
+  background: #f3f5f7;
+  border-radius: 8px;
+  padding: 1.1em 1.2em 1.1em 1.2em;
+  text-align: left;
+  font-size: 0.98em;
+  margin-bottom: 0.2em;
+  overflow-x: auto;
+  border: 1px solid #e0e4e8;
+}
+.code-block pre {
+  margin: 0;
+  background: none;
+  font-family: 'JetBrains Mono', 'Fira Mono', 'Menlo', 'Consolas', monospace;
+  font-size: 1em;
+  color: #2d3a4a;
+  line-height: 1.6;
+  overflow-x: auto;
+}
+.copy-btn {
+  position: absolute;
+  top: 0.7em;
+  right: 0.9em;
+  background: #e8f5e9;
+  color: #388e3c;
+  border: none;
+  border-radius: 5px;
+  padding: 0.3em 0.8em;
+  font-size: 0.95em;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  z-index: 2;
+}
+.copy-btn:hover {
+  background: #388e3c;
+  color: #fff;
+}
+
+@media (max-width: 700px) {
+  .main-content {
+    max-width: 100vw;
+    padding: 1.2em 0.2em 2em 0.2em;
+  }
+  .demo-card {
+    max-width: 98vw;
+    padding: 1.2em 0.5em 1em 0.5em;
+  }
+  .section-title {
+    font-size: 1.3em;
+  }
+}

@@ -165,8 +165,7 @@
     return $(container).find('[tabindex="0"]:visible').toArray();
   }
 
-  // Infinite scroll: default page size
-  const DEFAULT_PAGE_SIZE = 20;
+  // Infinite scroll: default page size is now dynamic via settings.pageSize
 
   // Helper: trigger lazy load for open nodes on initial render
   function triggerInitialLazyLoad(node, settings, callbacks, path, idNodeMap, $container) {
@@ -181,12 +180,14 @@
         if ($container && $container.length) {
           $container.empty();
           buildIdNodeMap(settings.data); // update ids
-          $container.append(renderTree(settings.data, callbacks, null, [], settings, {}, $container));
+          const $treeWrapper = $('<div class="radix-tree"></div>');
+          $treeWrapper.append(renderTree(settings.data, callbacks, null, [], settings, {}, $container));
+          $container.append($treeWrapper);
         }
       }, {
         page: 1,
-        pageSize: node.pageSize || DEFAULT_PAGE_SIZE
-      });
+        pageSize: node.pageSize || settings.pageSize
+      }, settings.lazyLoadDelay);
     }
     if (node.children && node.children.length) {
       node.children.forEach((child, idx) => {
@@ -197,11 +198,17 @@
 
   // Render function with checkboxes, unique ids, keyboard navigation, lazy loading, badges/tags, and infinite scroll
   function renderTree(data, callbacks, parentNode = null, path = [], settings = {}, idNodeMap = {}, $container, parentDisabled = false) {
+    const rowHeight = 32; // px, approximate height of a row (used for scroll container and last <li> padding)
     const ul = document.createElement('ul');
     ul.className = 'tree';
-    // Infinite scroll: if parentNode has infinite: true, make ul scrollable
-    if (parentNode && parentNode.infinite) {
-      ul.style.maxHeight = '300px';
+    // Infinite scroll: only enable if pageSize >= paginateThreshold and children count >= pageSize
+    if (parentNode && parentNode.infinite && settings.pageSize >= settings.paginateThreshold && (parentNode.children && parentNode.children.length >= settings.pageSize)) {
+      // Dynamically calculate max-height based on pageSize
+      if (settings.pageSize < 10) {
+        ul.style.maxHeight = (settings.pageSize * rowHeight) + 'px';
+      } else {
+        ul.style.maxHeight = '300px';
+      }
       ul.style.overflowY = 'auto';
       ul.setAttribute('data-infinite', 'true');
       // Attach scroll event for infinite loading
@@ -246,14 +253,15 @@
                       // Fallback: re-render whole tree
                       $container.empty();
                       buildIdNodeMap(settings.data); // update ids
-                      const newTree = renderTree(settings.data, callbacks, null, [], settings, {}, $container);
-                      $container.append(newTree);
+                      const $treeWrapper = $('<div class="radix-tree"></div>');
+                      $treeWrapper.append(renderTree(settings.data, callbacks, null, [], settings, {}, $container));
+                      $container.append($treeWrapper);
                     }
                   }
                 }, {
                   page: parentNode._page || 1,
-                  pageSize: parentNode.pageSize || DEFAULT_PAGE_SIZE
-                });
+                  pageSize: parentNode.pageSize || settings.pageSize
+                }, settings.lazyLoadDelay);
                 parentNode._page = (parentNode._page || 1) + 1;
               }
             }
@@ -263,6 +271,14 @@
     }
     data.forEach((node, idx) => {
       const li = document.createElement('li');
+      // Dynamic className for parent/child nodes
+      if (node.className) {
+        if ((node.children && node.children.length) || node.lazy) {
+          li.classList.add(node.className); // Parent node
+        } else {
+          li.classList.add(node.className); // Child node
+        }
+      }
       // Propagate disabled state from parent
       const isDisabled = !!node.disabled || !!parentDisabled;
       // Checkbox with unique id
@@ -299,12 +315,15 @@
             parent = idNodeMap[current._radixParentId];
           }
         }
-        const $container = $(li).closest('.radix-tree');
+        // Always use the root container for re-rendering
+        let $container = $('.radix-tree-parent');
         if ($container.length) {
           const settings = $container.data('radixTreeSettings');
           $container.empty();
           buildIdNodeMap(settings.data); // update ids
-          $container.append(renderTree(settings.data, callbacks, null, [], settings, {}, $container));
+          const $treeWrapper = $('<div class="radix-tree"></div>');
+          $treeWrapper.append(renderTree(settings.data, callbacks, null, [], settings, {}, $container));
+          $container.append($treeWrapper);
         }
         callbacks.onCheck && callbacks.onCheck(node, checkbox);
       });
@@ -430,11 +449,14 @@
               // Show loading indicator
               if (!node.children) node.children = [];
               node._loading = true;
-              const $container = $(li).closest('.radix-tree');
+              // Always use the root container for re-rendering
+              let $container = $('.radix-tree-parent');
               if ($container.length) {
                 $container.empty();
                 buildIdNodeMap(settings.data); // update ids
-                $container.append(renderTree(settings.data, callbacks, null, [], settings, {}, $container));
+                const $treeWrapper = $('<div class="radix-tree"></div>');
+                $treeWrapper.append(renderTree(settings.data, callbacks, null, [], settings, {}, $container));
+                $container.append($treeWrapper);
               }
               settings.lazyLoad(node, function (children, hasMore) {
                 node.children = children;
@@ -445,12 +467,14 @@
                 if ($container.length) {
                   $container.empty();
                   buildIdNodeMap(settings.data); // update ids
-                  $container.append(renderTree(settings.data, callbacks, null, [], settings, {}, $container));
+                  const $treeWrapper = $('<div class="radix-tree"></div>');
+                  $treeWrapper.append(renderTree(settings.data, callbacks, null, [], settings, {}, $container));
+                  $container.append($treeWrapper);
                 }
               }, {
                 page: 1,
-                pageSize: node.pageSize || DEFAULT_PAGE_SIZE
-              });
+                pageSize: node.pageSize || settings.pageSize
+              }, settings.lazyLoadDelay);
             }
           }, 0);
           if (details.open) {
@@ -482,12 +506,19 @@
       }
       ul.appendChild(li);
     });
+    // Add padding-bottom to the last <li> if this is a scrollable container
+    if (parentNode && parentNode.infinite && settings.pageSize >= settings.paginateThreshold && (parentNode.children && parentNode.children.length >= settings.pageSize)) {
+      if (ul.lastElementChild) {
+        ul.lastElementChild.style.paddingBottom = rowHeight/3 + 'px';
+      }
+    }
     return ul;
   }
 
   // Keyboard navigation handler
   function handleKeyboardNav(e, currentElem, li) {
-    const $container = $(li).closest('.radix-tree');
+    let $container = $(li).closest('.radix-tree-parent');
+    if (!$container.length) $container = $(li).parent();
     if (!$container.length) return;
     const focusables = getFocusableElements($container);
     const idx = focusables.indexOf(currentElem);
@@ -570,7 +601,9 @@
             updateParents(node);
             $container.empty();
             buildIdNodeMap(settings.data); // update ids
-            $container.append(renderTree(settings.data, settings.callbacks, null, [], settings, {}, $container));
+            const $treeWrapper = $('<div class="radix-tree"></div>');
+            $treeWrapper.append(renderTree(settings.data, settings.callbacks, null, [], settings, {}, $container));
+            $container.append($treeWrapper);
           }
           return;
         }
@@ -581,7 +614,9 @@
             node.open = true;
             $container.empty();
             buildIdNodeMap(settings.data); // update ids
-            $container.append(renderTree(settings.data, settings.callbacks, null, [], settings, {}, $container));
+            const $treeWrapper = $('<div class="radix-tree"></div>');
+            $treeWrapper.append(renderTree(settings.data, settings.callbacks, null, [], settings, {}, $container));
+            $container.append($treeWrapper);
           }
           return;
         }
@@ -592,7 +627,9 @@
             node.open = false;
             $container.empty();
             buildIdNodeMap(settings.data); // update ids
-            $container.append(renderTree(settings.data, settings.callbacks, null, [], settings, {}, $container));
+            const $treeWrapper = $('<div class="radix-tree"></div>');
+            $treeWrapper.append(renderTree(settings.data, settings.callbacks, null, [], settings, {}, $container));
+            $container.append($treeWrapper);
           }
           return;
         }
@@ -603,7 +640,9 @@
           settings.data = newData;
           $container.empty();
           buildIdNodeMap(settings.data); // update ids
-          $container.append(renderTree(settings.data, settings.callbacks, null, [], settings, {}, $container));
+          const $treeWrapper = $('<div class="radix-tree"></div>');
+          $treeWrapper.append(renderTree(settings.data, settings.callbacks, null, [], settings, {}, $container));
+          $container.append($treeWrapper);
           return;
         }
       }
@@ -617,6 +656,9 @@
       onCollapse: null,
       onClick: null,
       onCheck: null,
+      lazyLoadDelay: 1000, // ms, default delay for lazy loading
+      pageSize: 20,        // default page size for infinite scroll/lazy load
+      // paginateThreshold is now optional
       // Sample lazyLoad function for demo
       lazyLoad: function(node, done) {
         // Simulate async loading based on label
@@ -713,9 +755,14 @@
               ];
           }
           done(children);
-        }, 1000);
+        }, settings.lazyLoadDelay);
       }
     }, optionsOrCommand);
+
+    // Set paginateThreshold to Math.min(10, settings.pageSize) if not provided
+    if (typeof settings.paginateThreshold === 'undefined') {
+      settings.paginateThreshold = Math.min(10, settings.pageSize);
+    }
 
     // Store callbacks for command API
     settings.callbacks = {
@@ -728,6 +775,10 @@
     return this.each(function () {
       const $container = $(this);
       $container.empty();
+      $container.addClass('radix-tree-parent'); // Ensure parent class is always set
+      if (settings.rootClassName) {
+        $container.addClass(settings.rootClassName);
+      }
       $container.data('radixTreeSettings', settings); // Store settings for rerender
       checkboxIdCounter = 0; // Reset counter for each render
       const idNodeMap = buildIdNodeMap(settings.data); // Ensure _radixId is set
@@ -735,7 +786,10 @@
       settings.data.forEach((node, idx) => {
         triggerInitialLazyLoad(node, settings, settings.callbacks, [idx], idNodeMap, $container);
       });
-      $container.append(renderTree(settings.data, settings.callbacks, null, [], settings, idNodeMap, $container));
+      // Wrap the tree in a parent div.radix-tree
+      const $treeWrapper = $('<div class="radix-tree"></div>');
+      $treeWrapper.append(renderTree(settings.data, settings.callbacks, null, [], settings, idNodeMap, $container));
+      $container.append($treeWrapper);
     });
   };
 });
