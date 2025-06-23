@@ -1,5 +1,8 @@
 # Radix Tree jQuery Plugin
 
+[![jsDelivr](https://data.jsdelivr.com/v1/package/gh/dxmari/jquery-radix-tree/badge)](https://www.jsdelivr.com/package/gh/dxmari/jquery-radix-tree)
+[![npm version](https://badge.fury.io/js/jquery-radix-tree.svg)](https://badge.fury.io/js/jquery-radix-tree)
+
 A powerful, modern, and highly interactive tree view component for jQuery, supporting deep nesting, lazy loading, checkboxes, badges, tags, keyboard navigation, infinite scroll, and more.  
 Perfect for dashboards, data explorers, and any UI that needs a dynamic, hierarchical structure.
 
@@ -524,3 +527,40 @@ For questions, open an issue or start a discussion.
 
 **Enjoy your new interactive tree!**  
 For questions or contributions, open an issue or PR on GitHub.
+
+## CDN Usage
+
+**jsDelivr (GitHub):**
+```html
+<!-- jQuery (required) -->
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+<!-- Radix Tree Plugin (latest) -->
+<script src="https://cdn.jsdelivr.net/gh/dxmari/jquery-radix-tree@latest/tree.js"></script>
+<!-- No CSS needed! -->
+<div class="radix-tree"></div>
+<script>
+  $('.radix-tree').radixTree({ data: [ /* ... */ ] });
+</script>
+```
+
+**jsDelivr (specific version):**
+```html
+<script src="https://cdn.jsdelivr.net/gh/dxmari/jquery-radix-tree@v1.0.0/tree.js"></script>
+```
+
+**unpkg (npm):**
+```html
+<script src="https://unpkg.com/jquery-radix-tree@latest/dist/tree.js"></script>
+```
+
+## NPM Usage
+
+```sh
+npm install jquery-radix-tree
+```
+
+```js
+import 'jquery-radix-tree/dist/tree.js';
+import $ from 'jquery';
+$('.radix-tree').radixTree({ data: [ /* ... */ ] });
+```

@@ -1,0 +1,14 @@
+{
+  "name": "jquery-radix-tree",
+  "version": "1.0.0",
+  "description": "A modern, interactive, deeply nestable tree view jQuery plugin with checkboxes, lazy loading, infinite scroll, and more.",
+  "main": "tree.js",
+  "files": ["tree.js"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxmari/jquery-radix-tree.git"
+  },
+  "author": "dxmari",
+  "license": "MIT",
+  "keywords": ["jquery", "tree", "treeview", "plugin", "checkbox", "lazyload", "infinite scroll", "ui", "radix"]
+} 
