@@ -9,6 +9,19 @@
     integrity="sha256-kmHvs0B+OpCW5GVHUNjv9rOmY0IvSIRcf7zGUDTDQM8=" crossorigin="anonymous"></script>
   <script src="tree.js"></script>
   <link rel="stylesheet" href="tree.css">
+  <style>
+    html {
+      height: 100%;
+      font-family: Proza, sans-serif;
+      font-size: clamp(18px, 100vw / var(--width), 20px);
+      font-feature-settings: 'onum', 'pnum';
+      font-weight: 300;
+      margin: auto;
+      max-width: 500px;
+      margin-top: 120px;
+      font-size: 20px;
+    }
+  </style>
 </head>
 
 <body>
@@ -18,7 +31,142 @@
   <script>
     $(document).ready(() => {
       console.log('Init');
-
+      const data = [
+        {
+          label: 'Universe',
+          open: true,
+          children: [
+            {
+              label: 'Galaxies',
+              open: true,
+              children: [
+                {
+                  label: 'Milky Way',
+                  open: false,
+                  children: [
+                    {
+                      label: 'Solar System',
+                      open: false,
+                      children: [
+                        {
+                          label: 'Planets',
+                          open: false,
+                          children: [
+                            { label: 'Mercury' },
+                            { label: 'Venus' },
+                            {
+                              label: 'Earth', open: true, children: [
+                                { label: 'Moon', open: false },
+                                { label: 'ISS', open: false }
+                              ]
+                            },
+                            {
+                              label: 'Mars', open: false, children: [
+                                { label: 'Phobos', disabled: true, checked: true },
+                                { label: 'Deimos' }
+                              ]
+                            },
+                            {
+                              label: 'Jupiter', open: false, children: [
+                                { label: 'Io' },
+                                { label: 'Europa' },
+                                { label: 'Ganymede' },
+                                { label: 'Callisto' }
+                              ]
+                            },
+                            { label: 'Saturn' },
+                            { label: 'Uranus' },
+                            { label: 'Neptune' }
+                          ]
+                        },
+                        {
+                          label: 'Asteroid Belt',
+                          open: false,
+                          children: [
+                            { label: 'Ceres' },
+                            { label: 'Vesta' },
+                            { label: 'Pallas' },
+                            { label: 'Hygiea' }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      label: 'Alpha Centauri System',
+                      open: false,
+                      children: [
+                        { label: 'Alpha Centauri A' },
+                        { label: 'Alpha Centauri B' },
+                        { label: 'Proxima Centauri' }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  label: 'Andromeda',
+                  open: false,
+                  children: [
+                    { label: 'Star System 1' },
+                    { label: 'Star System 2' }
+                  ]
+                }
+              ]
+            },
+            {
+              label: 'Black Holes',
+              open: false,
+              children: [
+                {
+                  label: 'Supermassive', open: false, children: [
+                    { label: 'Sagittarius A*' },
+                    { label: 'M87*' }
+                  ]
+                },
+                {
+                  label: 'Stellar-mass', open: false, children: [
+                    { label: 'Cygnus X-1' },
+                    { label: 'V404 Cygni' }
+                  ]
+                }
+              ]
+            },
+            {
+              label: 'Nebulae',
+              open: false,
+              children: [
+                { label: 'Orion Nebula' },
+                { label: 'Crab Nebula' },
+                { label: 'Eagle Nebula' }
+              ]
+            }
+          ]
+        },
+        // {
+        //   label: 'Multiverse',
+        //   open: false,
+        //   children: [
+        //     { label: 'Parallel Universe 1' },
+        //     {
+        //       label: 'Parallel Universe 2', open: false, children: [
+        //         {
+        //           label: 'Alt Galaxy', open: false, children: [
+        //             {
+        //               label: 'Alt Solar System', open: false, children: [
+        //                 {
+        //                   label: 'Alt Earth', open: false, children: [
+        //                     { label: 'Alt Moon' },
+        //                     { label: 'Alt Mars' }
+        //                   ]
+        //                 }
+        //               ]
+        //             }
+        //           ]
+        //         }
+        //       ]
+        //     }
+        //   ]
+        // }
+      ];
       const demoData = [
         {
           label: 'Big Folder',
@@ -49,21 +197,25 @@
         }, delay); // Use the dynamic delay
       }
 
-      // Example 1: Large page size (pagination and scroll enabled)
-      $('.radix-tree-large').radixTree({
-        data: demoData,
-        lazyLoad: infiniteLazyLoad,
-        pageSize: 20,        // Pagination and scroll enabled (>= 10)
-        lazyLoadDelay: 500   // Delay for each page load
-      });
+      // // Example 1: Large page size (pagination and scroll enabled)
+      // $('.radix-tree-large').radixTree({
+      //   data: demoData,
+      //   lazyLoad: infiniteLazyLoad,
+      //   pageSize: 20,        // Pagination and scroll enabled (>= 10)
+      //   lazyLoadDelay: 500   // Delay for each page load
+      // });
 
-      // Example 2: Small page size (no pagination or scroll)
-      $('.radix-tree-small').radixTree({
-        data: demoData,
-        lazyLoad: infiniteLazyLoad,
-        pageSize: 5,         // No pagination or scroll (< 10)
-        lazyLoadDelay: 800
-      });
+      // // Example 2: Small page size (no pagination or scroll)
+      // $('.radix-tree-small').radixTree({
+      //   data: demoData,
+      //   lazyLoad: infiniteLazyLoad,
+      //   pageSize: 5,         // No pagination or scroll (< 10)
+      //   lazyLoadDelay: 800
+      // });
+
+      $('.demo-tree').radixTree({
+        data: data
+      })
     });
   </script>
 </body>

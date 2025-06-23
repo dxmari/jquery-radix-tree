@@ -5,6 +5,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Radix Tree jQuery Plugin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="tree.css">
   <script src="https://code.jquery.com/jquery-3.7.1.slim.min.js" crossorigin="anonymous"></script>
@@ -24,9 +29,13 @@
         <a href="#introduction" class="active">Introduction</a>
         <a href="#features">Features</a>
         <div class="sidebar-group">
-          <a href="#guide" class="sidebar-parent" id="guide-toggle" aria-expanded="false">Guides <span
-              class="accordion-arrow">▸</span></a>
-          <div class="sidebar-children" id="guide-children">
+          <a href="#guide" class="sidebar-parent" id="guide-toggle" aria-expanded="true">Guides <span
+              class="accordion-arrow"><svg id="chevron-svg" width="16" height="16" viewBox="0 0 20 20" fill="none"
+                xmlns="http://www.w3.org/2000/svg">
+                <path d="M7 5L12 10L7 15" stroke="#388e3c" stroke-width="2" stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </svg></span></a>
+          <div class="sidebar-children open" id="guide-children">
             <a href="#guide-basic">Basic Example</a>
             <a href="#guide-lazy">Lazy Loading</a>
             <a href="#guide-badges">Badges & Tags</a>
@@ -35,13 +44,16 @@
             <a href="#guide-api">Command API</a>
           </div>
         </div>
+        <a href="#faq" class="sidebar-faq-link">FAQ</a>
+        <a href="#troubleshooting" class="sidebar-faq-link">Troubleshooting</a>
+        <a href="#contributing" class="sidebar-faq-link">Contributing</a>
       </nav>
       <a class="github-btn" href="https://github.com/yourusername/JM-Dashboard" target="_blank" rel="noopener">★
         GitHub</a>
-      <div class="on-this-page" id="on-this-page">
+      <!-- <div class="on-this-page" id="on-this-page">
         <div class="on-this-page-title">On This Page</div>
         <ul></ul>
-      </div>
+      </div> -->
     </aside>
     <main class="main">
       <section class="hero" id="introduction">
@@ -83,273 +95,438 @@
               checkboxes, beautiful lines, accessible.</span></div>
         </div>
       </section>
-      <div class="section-title" id="guide">Guides: Usage & Demos</div>
-      <div class="basic-example">
-        <div class="section-subtitle">Basic Example</div>
-        <hr class="section-divider" />
-        <div class="section-intro">With <b>Radix Tree</b>, you can render simple tree deeply nestable nodes with a basic
-          hierarchical data structure. You can expand and collapse nodes, and the tree supports unlimited nesting.
-          Useful for representing folders, categories, or any parent-child relationships.</div>
-        <div class="section-intro">For example, you can use import this snippet inside your files like this:</div>
-        <div class="code-card">
-          <div class="code-card-header"><span class="code-card-icon"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#fff"><path d="m384-336 56-57-87-87 87-87-56-57-144 144 144 144Zm192 0 144-144-144-144-56 57 87 87-87 87 56 57ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z"/></svg></span> Basic Demo</div>
-          <button class="copy-btn" onclick="copyCode('code-basic')" title="Copy"><svg viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2" height="1em" class="nextra-copy-icon">
-              <rect x="9" y="9" width="13" height="13" rx="2"></rect>
-              <path d="M5 15H4C2.89543 15 2 14.1046 2 13V4C2 2.89543 2.89543 2 4 2H13C14.1046 2 15 2.89543 15 4V5">
-              </path>
-            </svg></button>
-          <pre class="code-block language-js" id="code-basic">
-            <code>
-const data = [
-  {
-    label: 'Universe',
-    open: true,
-    children: [
-      { label: 'Galaxies', children: [ { label: 'Milky Way' }, { label: 'Andromeda' } ] },
-      { label: 'Black Holes' }
-    ]
-  }
-];
-$('.radix-tree').radixTree({ data });
+      <section class="guides-section" id="guide">
+        <div class="section-title">Guides: Usage & Demos</div>
+        <div class="basic-example">
+          <div class="section-subtitle">Basic Example</div>
+          <hr class="section-divider" />
+          <div class="section-intro">With <b>Radix Tree</b>, you can render simple tree deeply nestable nodes with a
+            basic
+            hierarchical data structure. You can expand and collapse nodes, and the tree supports unlimited nesting.
+            Useful for representing folders, categories, or any parent-child relationships.</div>
+          <div class="section-intro">For example, you can use import this snippet inside your files like this:</div>
+          <div class="code-card">
+            <div class="code-card-header"><span class="code-card-icon"><svg xmlns="http://www.w3.org/2000/svg"
+                  height="24px" viewBox="0 -960 960 960" width="24px" fill="#fff">
+                  <path
+                    d="m384-336 56-57-87-87 87-87-56-57-144 144 144 144Zm192 0 144-144-144-144-56 57 87 87-87 87 56 57ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z" />
+                </svg></span> Basic Demo</div>
+            <button class="copy-btn" onclick="copyCode('code-basic', event)" title="Copy"><svg viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" height="1em" class="nextra-copy-icon">
+                <rect x="9" y="9" width="13" height="13" rx="2"></rect>
+                <path d="M5 15H4C2.89543 15 2 14.1046 2 13V4C2 2.89543 2.89543 2 4 2H13C14.1046 2 15 2.89543 15 4V5">
+                </path>
+              </svg></button>
+            <pre class="code-block language-js" id="code-basic">
+              <code>
+  const data = [
+    {
+      label: 'Universe',
+      open: true,
+      children: [
+        { label: 'Galaxies', children: [ { label: 'Milky Way' }, { label: 'Andromeda' } ] },
+        { label: 'Black Holes' }
+      ]
+    }
+  ];
+  $('.radix-tree').radixTree({ data });
+              </code>
+            </pre>
+          </div>
+          <br>
+          <br>
+          <div class="output-card-header">Output</div>
+          <div class="output-card">
+            <div class="demo-tree" id="demo-basic"></div>
+          </div>
+        </div>
+        <div class="lazy-loading">
+          <div class="section-subtitle" id="guide-lazy">Lazy Loading</div>
+          <hr class="section-divider" />
+          <div class="section-intro">Load children on demand with async support. This example shows how to use the
+            <code>lazyLoad</code> callback to fetch children only when a node is expanded. Ideal for large datasets or
+            when loading data from a server.
+          </div>
+          <div class="section-intro">For example, you can use import this snippet inside your files like this:</div>
+          <div class="code-card">
+            <div class="code-card-header"><span class="code-card-icon"><svg xmlns="http://www.w3.org/2000/svg"
+                  height="24px" viewBox="0 -960 960 960" width="24px" fill="#fff">
+                  <path
+                    d="m384-336 56-57-87-87 87-87-56-57-144 144 144 144Zm192 0 144-144-144-144-56 57 87 87-87 87 56 57ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z" />
+                </svg></span> Lazy Loading Demo</div>
+            <button class="copy-btn" onclick="copyCode('code-lazy', event)" title="Copy">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" height="1em"
+                class="nextra-copy-icon">
+                <rect x="9" y="9" width="13" height="13" rx="2"></rect>
+                <path d="M5 15H4C2.89543 15 2 14.1046 2 13V4C2 2.89543 2.89543 2 4 2H13C14.1046 2 15 2.89543 15 4V5">
+                </path>
+              </svg>
+            </button>
+            <pre class="code-block language-js" id="code-lazy">
+              <code>
+  function myLazyLoad(node, done, delay) {
+      setTimeout(() => {
+        if (node.label === 'Galaxies') {
+          done([{ label: 'Milky Way' }, { label: 'Andromeda' }]);
+        } else {
+          done([{ label: 'No data' }]);
+        }
+      }, delay); // Use the dynamic delay
+    }
+  $('.radix-tree').radixTree({
+    data: [{ label: 'Galaxies', lazy: true }],
+    lazyLoad: myLazyLoad,
+    lazyLoadDelay: 1200 // Set delay dynamically (ms)
+  });
             </code>
           </pre>
-        </div>
-        <hr class="output-divider" />
-        <div class="output-card">
+          </div>
+          <br>
+          <br>
           <div class="output-card-header">Output</div>
-          <div class="demo-tree" id="demo-basic"></div>
+          <div class="output-card">
+            <div class="demo-tree" id="demo-lazy"></div>
+          </div>
         </div>
-      </div>
-
-      <div class="lazy-loading">
-        <div class="section-subtitle" id="guide-lazy">Lazy Loading</div>
-        <div class="demo-desc">
-          Load children on demand with async support. This example shows how to use the <code>lazyLoad</code> callback
-          to
-          fetch children only when a node is expanded. Ideal for large datasets or when loading data from a server.
-        </div>
-        <div class="code-card">
-          <div class="code-card-header"><span class="code-card-icon"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#fff"><path d="m384-336 56-57-87-87 87-87-56-57-144 144 144 144Zm192 0 144-144-144-144-56 57 87 87-87 87 56 57ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z"/></svg></span> Lazy Loading Demo</div>
-          <button class="copy-btn" onclick="copyCode('code-lazy')" title="Copy">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" height="1em"
-              class="nextra-copy-icon">
-              <rect x="9" y="9" width="13" height="13" rx="2"></rect>
-              <path d="M5 15H4C2.89543 15 2 14.1046 2 13V4C2 2.89543 2.89543 2 4 2H13C14.1046 2 15 2.89543 15 4V5">
-              </path>
-            </svg>
-          </button>
-          <pre class="code-block language-js" id="code-lazy">
-            <code>
-function myLazyLoad(node, done, delay) {
-    setTimeout(() => {
-      if (node.label === 'Galaxies') {
-        done([{ label: 'Milky Way' }, { label: 'Andromeda' }]);
-      } else {
-        done([{ label: 'No data' }]);
+        <div class="badges-tags">
+          <div class="section-subtitle" id="guide-badges">Badges & Tags</div>
+          <hr class="section-divider" />
+          <div class="section-intro">Add badges and tags to any node for context. This example demonstrates how to use
+            the
+            <code>badge</code> and <code>tags</code> properties to visually annotate nodes, making it easy to highlight
+            status, counts, or categories.
+          </div>
+          <div class="section-intro">For example, you can use import this snippet inside your files like this:</div>
+          <div class="code-card">
+            <div class="code-card-header"><span class="code-card-icon"><svg xmlns="http://www.w3.org/2000/svg"
+                  height="24px" viewBox="0 -960 960 960" width="24px" fill="#fff">
+                  <path
+                    d="m384-336 56-57-87-87 87-87-56-57-144 144 144 144Zm192 0 144-144-144-144-56 57 87 87-87 87 56 57ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z" />
+                </svg></span> Badges & Tags Demo</div>
+            <button class="copy-btn" onclick="copyCode('code-badges', event)" title="Copy"><svg viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" height="1em" class="nextra-copy-icon">
+                <rect x="9" y="9" width="13" height="13" rx="2"></rect>
+                <path d="M5 15H4C2.89543 15 2 14.1046 2 13V4C2 2.89543 2.89543 2 4 2H13C14.1046 2 15 2.89543 15 4V5">
+                </path>
+              </svg></button>
+            <pre class="code-block language-js" id="code-badges">
+              <code>
+  const data = [
+      {
+        label: 'Projects',
+        badge: 2,
+        tags: ['active'],
+        children: [
+          { label: 'Frontend', badge: 'New', tags: ['UI', 'urgent'], lazy: true },
+          { label: 'Backend', badge: 5, tags: ['API'], lazy: true }
+        ]
       }
+    ];
+  $('.radix-tree').radixTree({ data });
+            </code>
+          </pre>
+          </div>
+          <br>
+          <br>
+          <div class="output-card-header">Output</div>
+          <div class="output-card">
+            <div class="demo-tree" id="demo-badges"></div>
+          </div>
+        </div>
+        <div class="infinite-scroll">
+          <div class="section-subtitle" id="guide-infinite">Infinite Scroll</div>
+          <hr class="section-divider" />
+          <div class="section-intro">Efficiently browse huge folders or datasets. This example shows how to enable
+            infinite scroll and pagination for large trees, loading more nodes as you scroll. Useful for file browsers
+            or
+            any large hierarchical data.</div>
+          <div class="section-intro">For example, you can use import this snippet inside your files like this:</div>
+          <div class="code-card">
+            <div class="code-card-header"><span class="code-card-icon"><svg xmlns="http://www.w3.org/2000/svg"
+                  height="24px" viewBox="0 -960 960 960" width="24px" fill="#fff">
+                  <path
+                    d="m384-336 56-57-87-87 87-87-56-57-144 144 144 144Zm192 0 144-144-144-144-56 57 87 87-87 87 56 57ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z" />
+                </svg></span> Infinite Scroll Demo</div>
+            <button class="copy-btn" onclick="copyCode('code-infinite', event)" title="Copy"><svg viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" height="1em" class="nextra-copy-icon">
+                <rect x="9" y="9" width="13" height="13" rx="2"></rect>
+                <path d="M5 15H4C2.89543 15 2 14.1046 2 13V4C2 2.89543 2.89543 2 4 2H13C14.1046 2 15 2.89543 15 4V5">
+                </path>
+              </svg></button>
+            <pre class="code-block language-js" id="code-infinite">
+              <code>
+  const demoData = [
+      {
+        label: 'Big Folder',
+        open: true,
+        infinite: true,
+        lazy: true,
+        badge: 100,
+        tags: ['infinite', 'files']
+      }
+    ];
+  function infiniteLazyLoad(node, done, opts, delay) {
+    const total = 100;
+    const page = opts && opts.page ? opts.page : 1;
+    const pageSize = opts && opts.pageSize ? opts.pageSize : 20;
+    const start = (page - 1) * pageSize;
+    const end = Math.min(start + pageSize, total);
+    const children = [];
+    for (let i = start; i < end; i++) {
+      children.push({
+        label: 'File ' + (i + 1),
+        badge: (i % 2 === 0) ? 'even' : 'odd',
+        tags: (i % 10 === 0) ? ['milestone'] : []
+      });
+    }
+    setTimeout(() => {
+      done(children, end < total);
     }, delay); // Use the dynamic delay
   }
-$('.radix-tree').radixTree({
-  data: [{ label: 'Galaxies', lazy: true }],
-  lazyLoad: myLazyLoad,
-  lazyLoadDelay: 1200 // Set delay dynamically (ms)
-});
-          </code>
-        </pre>
-        </div>
-        <hr class="output-divider" />
-        <div class="output-card">
+  // Example 1: Small pageSize, default threshold (pagination enabled for 5)
+  $('.radix-tree-small').radixTree({
+    data: demoData,
+    lazyLoad: infiniteLazyLoad,
+    pageSize: 5,         // Pagination enabled for 5 (default threshold is 5)
+    lazyLoadDelay: 800
+  });
+  // Example 2: Custom threshold (pagination only for pageSize >= 10)
+  $('.radix-tree-large').radixTree({
+    data: demoData,
+    lazyLoad: infiniteLazyLoad,
+    pageSize: 5,         // Pagination NOT enabled for 5 (threshold is 10)
+    paginateThreshold: 10,
+    lazyLoadDelay: 800
+  });
+            </code>
+          </pre>
+          </div>
+          <br>
+          <br>
           <div class="output-card-header">Output</div>
-          <div class="demo-tree" id="demo-lazy"></div>
+          <div class="output-card">
+            <div class="demo-tree" id="demo-infinite"></div>
+          </div>
         </div>
-      </div>
-      <div class="badges-tags">
-        <div class="section-subtitle" id="guide-badges">Badges & Tags</div>
-        <div class="demo-desc">
-          Add badges and tags to any node for context. This example demonstrates how to use the <code>badge</code> and
-          <code>tags</code> properties to visually annotate nodes, making it easy to highlight status, counts, or
-          categories.
-        </div>
-        <div class="code-card">
-          <div class="code-card-header"><span class="code-card-icon"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#fff"><path d="m384-336 56-57-87-87 87-87-56-57-144 144 144 144Zm192 0 144-144-144-144-56 57 87 87-87 87 56 57ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z"/></svg></span> Badges & Tags Demo</div>
-          <button class="copy-btn" onclick="copyCode('code-badges')" title="Copy"><svg viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2" height="1em" class="nextra-copy-icon">
-              <rect x="9" y="9" width="13" height="13" rx="2"></rect>
-              <path d="M5 15H4C2.89543 15 2 14.1046 2 13V4C2 2.89543 2.89543 2 4 2H13C14.1046 2 15 2.89543 15 4V5">
-              </path>
-            </svg></button>
-          <pre class="code-block language-js" id="code-badges">
-            <code>
-const data = [
-    {
-      label: 'Projects',
-      badge: 2,
-      tags: ['active'],
-      children: [
-        { label: 'Frontend', badge: 'New', tags: ['UI', 'urgent'], lazy: true },
-        { label: 'Backend', badge: 5, tags: ['API'], lazy: true }
-      ]
-    }
-  ];
-$('.radix-tree').radixTree({ data });
-          </code>
-        </pre>
-        </div>
-        <hr class="output-divider" />
-        <div class="output-card">
+        <div class="disabled-nodes">
+          <div class="section-subtitle" id="guide-disabled">Disabled Nodes</div>
+          <hr class="section-divider" />
+          <div class="section-intro">Disable any node or subtree. This example demonstrates how to use the
+            <code>disabled</code> property to prevent interaction with specific nodes or entire subtrees, useful for
+            permissions or workflow restrictions.
+          </div>
+          <div class="section-intro">For example, you can use import this snippet inside your files like this:</div>
+          <div class="code-card">
+            <div class="code-card-header"><span class="code-card-icon"><svg xmlns="http://www.w3.org/2000/svg"
+                  height="24px" viewBox="0 -960 960 960" width="24px" fill="#fff">
+                  <path
+                    d="m384-336 56-57-87-87 87-87-56-57-144 144 144 144Zm192 0 144-144-144-144-56 57 87 87-87 87 56 57ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z" />
+                </svg></span> Disabled Nodes Demo</div>
+            <button class="copy-btn" onclick="copyCode('code-disabled', event)" title="Copy"><svg viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" height="1em" class="nextra-copy-icon">
+                <rect x="9" y="9" width="13" height="13" rx="2"></rect>
+                <path d="M5 15H4C2.89543 15 2 14.1046 2 13V4C2 2.89543 2.89543 2 4 2H13C14.1046 2 15 2.89543 15 4V5">
+                </path>
+              </svg></button>
+            <pre class="code-block language-js" id="code-disabled">
+              <code>
+  const data = [
+      {
+        label: 'Root',
+        open: true,
+        children: [
+          { label: 'Enabled Node' },
+          {
+            label: 'Disabled Subtree',
+            disabled: true,
+            children: [
+              { label: 'Child 1' },
+              { label: 'Child 2', children: [{ label: 'Grandchild 1' }] }
+            ]
+          }
+        ]
+      }
+    ];
+  $('.radix-tree').radixTree({ data });
+              </code>
+            </pre>
+          </div>
+          <br>
+          <br>
           <div class="output-card-header">Output</div>
-          <div class="demo-tree" id="demo-badges"></div>
+          <div class="output-card">
+            <div class="demo-tree" id="demo-disabled"></div>
+          </div>
         </div>
-      </div>
-      <div class="infinite-scroll">
-        <div class="section-subtitle" id="guide-infinite">Infinite Scroll</div>
-        <div class="demo-desc">
-          Efficiently browse huge folders or datasets. This example shows how to enable infinite scroll and pagination
-          for
-          large trees, loading more nodes as you scroll. Useful for file browsers or any large hierarchical data.
-        </div>
-        <div class="code-card">
-          <div class="code-card-header"><span class="code-card-icon"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#fff"><path d="m384-336 56-57-87-87 87-87-56-57-144 144 144 144Zm192 0 144-144-144-144-56 57 87 87-87 87 56 57ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z"/></svg></span> Infinite Scroll Demo</div>
-          <button class="copy-btn" onclick="copyCode('code-infinite')" title="Copy"><svg viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2" height="1em" class="nextra-copy-icon">
-              <rect x="9" y="9" width="13" height="13" rx="2"></rect>
-              <path d="M5 15H4C2.89543 15 2 14.1046 2 13V4C2 2.89543 2.89543 2 4 2H13C14.1046 2 15 2.89543 15 4V5">
-              </path>
-            </svg></button>
-          <pre class="code-block language-js" id="code-infinite">
-            <code>
-const demoData = [
-    {
-      label: 'Big Folder',
-      open: true,
-      infinite: true,
-      lazy: true,
-      badge: 100,
-      tags: ['infinite', 'files']
-    }
-  ];
-function infiniteLazyLoad(node, done, opts, delay) {
-  const total = 100;
-  const page = opts && opts.page ? opts.page : 1;
-  const pageSize = opts && opts.pageSize ? opts.pageSize : 20;
-  const start = (page - 1) * pageSize;
-  const end = Math.min(start + pageSize, total);
-  const children = [];
-  for (let i = start; i < end; i++) {
-    children.push({
-      label: 'File ' + (i + 1),
-      badge: (i % 2 === 0) ? 'even' : 'odd',
-      tags: (i % 10 === 0) ? ['milestone'] : []
-    });
-  }
-  setTimeout(() => {
-    done(children, end < total);
-  }, delay); // Use the dynamic delay
-}
-// Example 1: Small pageSize, default threshold (pagination enabled for 5)
-$('.radix-tree-small').radixTree({
-  data: demoData,
-  lazyLoad: infiniteLazyLoad,
-  pageSize: 5,         // Pagination enabled for 5 (default threshold is 5)
-  lazyLoadDelay: 800
-});
-// Example 2: Custom threshold (pagination only for pageSize >= 10)
-$('.radix-tree-large').radixTree({
-  data: demoData,
-  lazyLoad: infiniteLazyLoad,
-  pageSize: 5,         // Pagination NOT enabled for 5 (threshold is 10)
-  paginateThreshold: 10,
-  lazyLoadDelay: 800
-});
-          </code>
-        </pre>
-        </div>
-        <hr class="output-divider" />
-        <div class="output-card">
+        <div class="command-api">
+          <div class="section-subtitle" id="guide-api">Command API</div>
+          <hr class="section-divider" />
+          <div class="section-intro">Interact with the tree after initialization. This example covers the available API
+            commands for getting and setting checked nodes, expanding/collapsing nodes, and updating the tree data
+            programmatically.</div>
+          <div class="section-intro">For example, you can use import this snippet inside your files like this:</div>
+          <div class="code-card">
+            <div class="code-card-header"><span class="code-card-icon"><svg xmlns="http://www.w3.org/2000/svg"
+                  height="24px" viewBox="0 -960 960 960" width="24px" fill="#fff">
+                  <path
+                    d="m384-336 56-57-87-87 87-87-56-57-144 144 144 144Zm192 0 144-144-144-144-56 57 87 87-87 87 56 57ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z" />
+                </svg></span> Command API Demo</div>
+            <button class="copy-btn" onclick="copyCode('code-api', event)" title="Copy"><svg viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" height="1em" class="nextra-copy-icon">
+                <rect x="9" y="9" width="13" height="13" rx="2"></rect>
+                <path d="M5 15H4C2.89543 15 2 14.1046 2 13V4C2 2.89543 2.89543 2 4 2H13C14.1046 2 15 2.89543 15 4V5">
+                </path>
+              </svg></button>
+            <pre class="code-block language-js" id="code-api">
+              <code>
+  const $tree = $('.radix-tree');
+  // Get checked nodes
+  const checked = $tree.radixTree('getChecked');
+  // Set checked state
+  $tree.radixTree('setChecked', 'node-id', true);
+  // Expand/collapse nodes
+  $tree.radixTree('expand', 'node-id');
+  $tree.radixTree('collapse', 'node-id');
+  // Get/set data
+  const data = $tree.radixTree('getData');
+  $tree.radixTree('setData', newData);
+              </code>
+            </pre>
+          </div>
+          <br>
+          <br>
           <div class="output-card-header">Output</div>
-          <div class="demo-tree" id="demo-infinite"></div>
+          <div class="output-card">
+            <div class="demo-tree" id="demo-api"></div>
+          </div>
         </div>
-      </div>
-      <div class="disabled-nodes">
-        <div class="section-subtitle" id="guide-disabled">Disabled Nodes</div>
-        <div class="demo-desc">
-          Disable any node or subtree. This example demonstrates how to use the <code>disabled</code> property to
-          prevent
-          interaction with specific nodes or entire subtrees, useful for permissions or workflow restrictions.
+      </section>
+      <!-- FAQ Section -->
+      <section class="faq-section" id="faq">
+        <div class="section-title">Frequently Asked Questions</div>
+        <!-- <hr class="faq-divider" /> -->
+        <div class="faq-desc text-center">
+          Frequently asked questions about the Radix Tree jQuery Plugin. For more, see the README or <a href="mailto:maaricse8@gmail.com" target="_blank" rel="noopener">contact us <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;"><path d="M14 3h7v7" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 14L21 3" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 21H3V3" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>.
         </div>
-        <div class="code-card">
-          <div class="code-card-header"><span class="code-card-icon"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#fff"><path d="m384-336 56-57-87-87 87-87-56-57-144 144 144 144Zm192 0 144-144-144-144-56 57 87 87-87 87 56 57ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z"/></svg></span> Disabled Nodes Demo</div>
-          <button class="copy-btn" onclick="copyCode('code-disabled')" title="Copy"><svg viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2" height="1em" class="nextra-copy-icon">
-              <rect x="9" y="9" width="13" height="13" rx="2"></rect>
-              <path d="M5 15H4C2.89543 15 2 14.1046 2 13V4C2 2.89543 2.89543 2 4 2H13C14.1046 2 15 2.89543 15 4V5">
-              </path>
-            </svg></button>
-          <pre class="code-block language-js" id="code-disabled">
-            <code>
-const data = [
-    {
-      label: 'Root',
-      open: true,
-      children: [
-        { label: 'Enabled Node' },
-        {
-          label: 'Disabled Subtree',
-          disabled: true,
-          children: [
-            { label: 'Child 1' },
-            { label: 'Child 2', children: [{ label: 'Grandchild 1' }] }
-          ]
-        }
-      ]
-    }
-  ];
-$('.radix-tree').radixTree({ data });
-          </code>
-        </pre>
+        <div class="faq-list">
+          <div class="faq-card">
+            <button class="faq-question" aria-expanded="false">
+              <span class="faq-chevron"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M8 10l4 4 4-4" stroke="#222" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <span>How do I update the tree data after initialization?</span>
+              <span class="faq-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M10 14L21 3" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 3v7m0-7h-7" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            </button>
+            <div class="faq-answer">Use the command API:<br><code>$('.radix-tree').radixTree('setData', newData);</code></div>
+          </div>
+          <div class="faq-card">
+            <button class="faq-question" aria-expanded="false">
+              <span class="faq-chevron"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M8 10l4 4 4-4" stroke="#222" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <span>How do I get the checked nodes?</span>
+              <span class="faq-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M10 14L21 3" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 3v7m0-7h-7" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            </button>
+            <div class="faq-answer"><code>const checked = $('.radix-tree').radixTree('getChecked');</code></div>
+          </div>
+          <div class="faq-card">
+            <button class="faq-question" aria-expanded="false">
+              <span class="faq-chevron"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M8 10l4 4 4-4" stroke="#222" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <span>How do I enable lazy loading or infinite scroll?</span>
+              <span class="faq-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M10 14L21 3" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 3v7m0-7h-7" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            </button>
+            <div class="faq-answer">Use <code>lazy: true</code> on nodes and provide a <code>lazyLoad</code> callback. For infinite scroll, set <code>infinite: true</code> and adjust <code>pageSize</code> and <code>lazyLoadDelay</code> as needed.</div>
+          </div>
+          <div class="faq-card">
+            <button class="faq-question" aria-expanded="false">
+              <span class="faq-chevron"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M8 10l4 4 4-4" stroke="#222" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <span>Can I disable nodes or subtrees?</span>
+              <span class="faq-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M10 14L21 3" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 3v7m0-7h-7" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            </button>
+            <div class="faq-answer">Yes, set <code>disabled: true</code> on any node or subtree in your data.</div>
+          </div>
+          <div class="faq-card">
+            <button class="faq-question" aria-expanded="false">
+              <span class="faq-chevron"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M8 10l4 4 4-4" stroke="#222" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <span>Is the plugin accessible and keyboard-friendly?</span>
+              <span class="faq-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M10 14L21 3" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 3v7m0-7h-7" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            </button>
+            <div class="faq-answer">Yes! The tree supports ARIA, keyboard navigation (arrows, space, enter, tab), and is screen reader friendly.</div>
+          </div>
         </div>
-        <hr class="output-divider" />
-        <div class="output-card">
-          <div class="output-card-header">Output</div>
-          <div class="demo-tree" id="demo-disabled"></div>
+      </section>
+      
+      <!-- Troubleshooting Section -->
+      <section class="troubleshooting-section" id="troubleshooting">
+        <h2 class="section-title">Troubleshooting</h2>
+        <!-- <hr class="section-divider" /> -->
+        <div class="section-intro text-center">Common issues and solutions when using the Radix Tree jQuery Plugin.</div>
+        
+        <div class="troubleshooting-list">
+          <div class="troubleshooting-item">
+            <h3>Tree not rendering?</h3>
+            <p>Make sure you included jQuery and the plugin script before your initialization code. Check the browser console for JavaScript errors.</p>
+          </div>
+          
+          <div class="troubleshooting-item">
+            <h3>Checkboxes not working?</h3>
+            <p>Check for JavaScript errors in the console and ensure your data structure is correct. Verify that nodes have the proper <code>checked</code> and <code>indeterminate</code> properties.</p>
+          </div>
+          
+          <div class="troubleshooting-item">
+            <h3>Custom classes not appearing?</h3>
+            <p>Verify you are using the <code>className</code> and <code>rootClassName</code> options as shown in the examples. Check that your CSS is properly targeting the generated class names.</p>
+          </div>
+          
+          <div class="troubleshooting-item">
+            <h3>Lazy loading not working?</h3>
+            <p>Ensure you've set <code>lazy: true</code> on nodes and provided a <code>lazyLoad</code> callback function. Check that the callback calls the <code>done</code> function with the children array.</p>
+          </div>
+          
+          <div class="troubleshooting-item">
+            <h3>Infinite scroll issues?</h3>
+            <p>Verify that <code>infinite: true</code> is set and check your <code>pageSize</code> and <code>lazyLoadDelay</code> settings. Ensure your lazy load callback handles pagination correctly.</p>
+          </div>
         </div>
-      </div>
-      <div class="command-api">
-        <div class="section-subtitle" id="guide-api">Command API</div>
-        <div class="demo-desc">
-          Interact with the tree after initialization. This example covers the available API commands for getting and
-          setting checked nodes, expanding/collapsing nodes, and updating the tree data programmatically.
+      </section>
+      
+      <!-- Contributing Section -->
+      <section class="contributing-section" id="contributing">
+        <h2 class="section-title">Contributing</h2>
+        <!-- <hr class="section-divider" /> -->
+        <div class="section-intro text-center">We welcome pull requests and issues! Here's how you can contribute to the Radix Tree jQuery Plugin.</div>
+        
+        <div class="contributing-content">
+          <h3>How to Contribute</h3>
+          <hr class="section-divider" />
+          <ol>
+            <li><strong>Fork the repo</strong> - Create your own copy of the repository</li>
+            <li><strong>Create a feature branch</strong> - Work on your changes in a separate branch</li>
+            <li><strong>Add tests if possible</strong> - Ensure your changes work correctly</li>
+            <li><strong>Open a PR</strong> - Submit a pull request with a clear description of your changes</li>
+          </ol>
+          
+          <h3>Development Setup</h3>
+          <hr class="section-divider" />
+          <ul>
+            <li>Clone the repository: <code>git clone https://github.com/yourusername/JM-Dashboard.git</code></li>
+            <li>Install dependencies: <code>npm install</code> (if you want to run tests)</li>
+            <li>Make your changes to <code>tree.js</code> and <code>style.css</code></li>
+            <li>Test your changes by opening <code>index.html</code> in a browser</li>
+          </ul>
+          
+          <h3>Testing</h3>
+          <hr class="section-divider" />
+          <p>Optional Mocha/Chai tests are available for plugin logic. Run tests with:</p>
+          <div class="code-block">
+            <pre><code>npm test</code></pre>
+          </div>
+          
+          <h3>Questions & Support</h3>
+          <hr class="section-divider" />
+          <p>For questions, open an issue or start a discussion on GitHub. We're here to help!</p>
+          
+          <div class="contributing-note">
+            <p><strong>Note:</strong> The plugin is designed to be lightweight and dependency-free (except jQuery). When contributing, please maintain this philosophy and ensure any new features don't add unnecessary complexity.</p>
+          </div>
         </div>
-        <div class="code-card">
-          <div class="code-card-header"><span class="code-card-icon"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#fff"><path d="m384-336 56-57-87-87 87-87-56-57-144 144 144 144Zm192 0 144-144-144-144-56 57 87 87-87 87 56 57ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z"/></svg></span> Command API Demo</div>
-          <button class="copy-btn" onclick="copyCode('code-api')" title="Copy"><svg viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2" height="1em" class="nextra-copy-icon">
-              <rect x="9" y="9" width="13" height="13" rx="2"></rect>
-              <path d="M5 15H4C2.89543 15 2 14.1046 2 13V4C2 2.89543 2.89543 2 4 2H13C14.1046 2 15 2.89543 15 4V5">
-              </path>
-            </svg></button>
-          <pre class="code-block language-js" id="code-api">
-            <code>
-// Get all checked nodes
-const checked = $('.radix-tree').radixTree('getChecked');
-// Set a node as checked
-$('.radix-tree').radixTree('setChecked', nodeId, true);
-// Expand/collapse nodes programmatically
-$('.radix-tree').radixTree('expand', nodeId);
-$('.radix-tree').radixTree('collapse', nodeId);
-// Get or set the entire data
-const currentData = $('.radix-tree').radixTree('getData');
-$('.radix-tree').radixTree('setData', newData);
-          </code>
-        </pre>
-        </div>
-        <hr class="output-divider" />
-        <div class="output-card">
-          <div class="output-card-header">Output</div>
-          <div class="demo-tree" id="demo-api"></div>
-        </div>
-      </div>
+      </section>
     </main>
   </div>
   <button class="scroll-to-top" id="scrollToTop" title="Scroll to top">↑</button>
@@ -376,13 +553,16 @@ $('.radix-tree').radixTree('setData', newData);
     // Accordion for Guide
     const guideToggle = document.getElementById('guide-toggle');
     const guideChildren = document.getElementById('guide-children');
-    const arrow = guideToggle.querySelector('.accordion-arrow');
+    const arrow = guideToggle.querySelector('.accordion-arrow svg');
+    guideToggle.setAttribute('aria-expanded', true);
+    arrow.style.transform = guideChildren.classList.contains('open') ? 'rotate(90deg)' : 'rotate(0deg)';
     guideToggle.addEventListener('click', function (e) {
       e.preventDefault();
       const expanded = guideChildren.classList.contains('open');
       guideChildren.classList.toggle('open', !expanded);
       guideToggle.setAttribute('aria-expanded', !expanded);
-      arrow.textContent = expanded ? '▸' : '▾';
+      arrow.style.transition = 'transform 0.2s';
+      arrow.style.transform = !expanded ? 'rotate(90deg)' : 'rotate(0deg)';
     });
     // Scroll to section on nav click
     document.querySelectorAll('.sidebar .nav a, .sidebar-children a').forEach(link => {
@@ -414,13 +594,21 @@ $('.radix-tree').radixTree('setData', newData);
         ul.appendChild(li);
       });
     }
-    window.addEventListener('DOMContentLoaded', updateOnThisPage);
+    // window.addEventListener('DOMContentLoaded', updateOnThisPage);
     // Scroll to top button
     const scrollBtn = document.getElementById('scrollToTop');
     window.addEventListener('scroll', () => {
       scrollBtn.classList.toggle('show', window.scrollY > 200);
     });
     scrollBtn.onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+    // FAQ Accordion
+    Array.from(document.querySelectorAll('.faq-question')).forEach(btn => {
+      btn.addEventListener('click', function () {
+        const expanded = btn.getAttribute('aria-expanded') === 'true';
+        btn.setAttribute('aria-expanded', !expanded);
+        btn.parentElement.classList.toggle('open', !expanded);
+      });
+    });
   </script>
 </body>
 

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multiple Radix Tree Instances Test</title>
+  <script src="https://code.jquery.com/jquery-3.7.1.slim.min.js"></script>
+  <script src="tree.js"></script>
+  <link rel="stylesheet" href="tree.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    .tree-container {
+      margin: 20px 0;
+      padding: 15px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    .tree-title {
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <h1>Multiple Radix Tree Instances Test</h1>
+  <p>This test demonstrates that multiple radix tree instances work independently.</p>
+  
+  <div class="tree-container">
+    <div class="tree-title">Tree Instance 1 (Large)</div>
+    <div class="radix-tree-large"></div>
+  </div>
+  
+  <div class="tree-container">
+    <div class="tree-title">Tree Instance 2 (Small)</div>
+    <div class="radix-tree-small"></div>
+  </div>
+  
+  <div class="tree-container">
+    <div class="tree-title">Tree Instance 3 (Default)</div>
+    <div class="radix-tree-default"></div>
+  </div>
+
+  <script>
+    $(document).ready(() => {
+      console.log('Initializing multiple radix tree instances...');
+
+      const demoData = [
+        {
+          label: 'Big Folder',
+          open: false,
+          infinite: true,
+          lazy: true,
+          badge: 100,
+          tags: ['infinite', 'files']
+        }
+      ];
+
+      function infiniteLazyLoad(node, done, opts, delay) {
+        const total = 100;
+        const page = opts && opts.page ? opts.page : 1;
+        const pageSize = opts && opts.pageSize ? opts.pageSize : 20;
+        const start = (page - 1) * pageSize;
+        const end = Math.min(start + pageSize, total);
+        const children = [];
+        for (let i = start; i < end; i++) {
+          children.push({
+            label: 'File ' + (i + 1),
+            badge: (i % 2 === 0) ? 'even' : 'odd',
+            tags: (i % 10 === 0) ? ['milestone'] : []
+          });
+        }
+        setTimeout(() => {
+          done(children, end < total);
+        }, delay);
+      }
+
+      function deepClone(obj) {
+        return JSON.parse(JSON.stringify(obj));
+      }
+
+      // Instance 1: Large page size
+      $('.radix-tree-large').radixTree({
+        data: deepClone(demoData),
+        lazyLoad: infiniteLazyLoad,
+        pageSize: 20,
+        lazyLoadDelay: 500
+      });
+
+      // Instance 2: Small page size
+      $('.radix-tree-small').radixTree({
+        data: deepClone(demoData),
+        lazyLoad: infiniteLazyLoad,
+        pageSize: 5,
+        lazyLoadDelay: 800
+      });
+
+      // Instance 3: Default settings
+      $('.radix-tree-default').radixTree({
+        data: [
+          {
+            label: 'Default Tree',
+            open: false,
+            children: [
+              { label: 'Child 1', checked: false },
+              { label: 'Child 2', checked: false },
+              { label: 'Child 3', checked: false }
+            ]
+          }
+        ]
+      });
+
+      console.log('All instances initialized successfully!');
+    });
+  </script>
+</body>
+</html> 

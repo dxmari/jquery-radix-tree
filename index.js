@@ -49,12 +49,22 @@ window.renderRadixDemo = function(selector, data, opts) {
 };
 
 // --- Copy Code Logic ---
-window.copyCode = function (id) {
-  const code = document.querySelector('#' + id + ' pre code').innerText;
+window.copyCode = function (id, event) {
+  const code = document.querySelector('#' + id + ' code').innerText;
   navigator.clipboard.writeText(code);
-  const btn = document.querySelector('#' + id + ' .copy-btn');
-  btn.innerText = 'Copied!';
-  setTimeout(() => { btn.innerText = 'Copy'; }, 1200);
+  const btn = event.currentTarget;
+  // Save original SVG
+  const originalSvg = btn.querySelector('svg');
+  const originalSvgHtml = originalSvg ? originalSvg.outerHTML : '';
+  // Tick SVG
+  const tickSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" height="1em" class="nextra-copy-icon"><polyline points="20 6 10 18 4 12" style="stroke:#4caf50;stroke-width:3;fill:none;"/></svg>`;
+  if (originalSvg) originalSvg.outerHTML = tickSvg;
+  btn.classList.add('copied');
+  setTimeout(() => {
+    // Restore original SVG
+    if (btn.querySelector('svg')) btn.querySelector('svg').outerHTML = originalSvgHtml;
+    btn.classList.remove('copied');
+  }, 1200);
 };
 
 // --- (Optional) Tab Logic ---
@@ -75,7 +85,7 @@ $(function () {
   window.renderRadixDemo('#demo-basic', window.radixDemoData.basic);
 
   // Lazy Loading Example
-  function myLazyLoad(node, done, delay) {
+  function myLazyLoad(node, done, opts, delay) {
     setTimeout(() => {
       if (node.label === 'Galaxies') {
         done([{ label: 'Milky Way' }, { label: 'Andromeda' }]);
@@ -84,8 +94,8 @@ $(function () {
       }
     }, delay);
   }
-  $('#demo-lazy').empty().append('<div class="radix-tree"></div>');
-  $('.radix-tree', '#demo-lazy').radixTree({
+  $('#demo-lazy').empty().append('<div class="demo-radix-tree"></div>');
+  $('.demo-radix-tree', '#demo-lazy').radixTree({
     data: [{ label: 'Galaxies', lazy: true }],
     lazyLoad: myLazyLoad,
     lazyLoadDelay: 1200

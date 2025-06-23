@@ -15,18 +15,6 @@
   --checkbox-indeterminate-border: 2px solid #ffa000;
 }
 
-/* html {
-  height: 100%;
-  font-family: Proza,sans-serif;
-  font-size: clamp(18px, 100vw / var(--width), 20px);
-  font-feature-settings: 'onum','pnum';
-  font-weight: 300;
-  margin: auto;
-  max-width: 500px;
-  margin-top: 120px;
-  font-size: 20px;
-} */
-
 .radix-tree{
   line-height: 1.5;
   -webkit-text-size-adjust: none;

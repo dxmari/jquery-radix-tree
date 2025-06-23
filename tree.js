@@ -265,7 +265,7 @@
                       const checkboxIdCounter = { val: 0 };
                       const idNodeMap = buildIdNodeMap(settings.data, [], {}, null, idPrefix, checkboxIdCounter);
                       const $treeWrapper = $('<div class="radix-tree"></div>');
-                      $treeWrapper.append(renderTree(settings.data, callbacks, null, [], settings, idNodeMap, $container, false, idPrefix, checkboxIdCounter));
+                      $treeWrapper.append(renderTree(settings.data, settings.callbacks, null, [], settings, idNodeMap, $container, false, idPrefix, checkboxIdCounter));
                       $container.append($treeWrapper);
                     }
                   }
@@ -327,9 +327,13 @@
             parent = idNodeMap[current._radixParentId];
           }
         }
-        // Always use the root container for re-rendering
-        let $container = $('.radix-tree-parent');
+        // Use the specific container that contains this checkbox
+        let $container = $(checkbox).closest('.radix-tree-parent');
         if ($container.length) {
+          // Save scroll position if infinite scroll is present
+          let $scrollTree = $container.find('.tree[data-infinite="true"]');
+          let scrollTop = $scrollTree.length ? $scrollTree.scrollTop() : null;
+
           const settings = $container.data('radixTreeSettings');
           const idPrefix = $container.data('radixTreeIdPrefix');
           const checkboxIdCounter = { val: 0 };
@@ -338,6 +342,14 @@
           const $treeWrapper = $('<div class="radix-tree"></div>');
           $treeWrapper.append(renderTree(settings.data, settings.callbacks, null, [], settings, idNodeMap, $container, false, idPrefix, checkboxIdCounter));
           $container.append($treeWrapper);
+
+          // Restore scroll position if needed
+          if (scrollTop !== null) {
+            let $newScrollTree = $container.find('.tree[data-infinite="true"]');
+            if ($newScrollTree.length) {
+              $newScrollTree.scrollTop(scrollTop);
+            }
+          }
         }
         callbacks.onCheck && callbacks.onCheck(node, checkbox);
       });
@@ -463,15 +475,15 @@
               // Show loading indicator
               if (!node.children) node.children = [];
               node._loading = true;
-              // Always use the root container for re-rendering
-              let $container = $('.radix-tree-parent');
+              // Use the specific container that contains this summary
+              let $container = $(summary).closest('.radix-tree-parent');
               if ($container.length) {
                 const idPrefix = $container.data('radixTreeIdPrefix');
                 const checkboxIdCounter = { val: 0 };
                 const idNodeMap = buildIdNodeMap(settings.data, [], {}, null, idPrefix, checkboxIdCounter);
                 $container.empty();
                 const $treeWrapper = $('<div class="radix-tree"></div>');
-                $treeWrapper.append(renderTree(settings.data, callbacks, null, [], settings, idNodeMap, $container, false, idPrefix, checkboxIdCounter));
+                $treeWrapper.append(renderTree(settings.data, settings.callbacks, null, [], settings, idNodeMap, $container, false, idPrefix, checkboxIdCounter));
                 $container.append($treeWrapper);
               }
               settings.lazyLoad(node, function (children, hasMore) {
@@ -486,7 +498,7 @@
                   const checkboxIdCounter = { val: 0 };
                   const idNodeMap = buildIdNodeMap(settings.data, [], {}, null, idPrefix, checkboxIdCounter);
                   const $treeWrapper = $('<div class="radix-tree"></div>');
-                  $treeWrapper.append(renderTree(settings.data, callbacks, null, [], settings, idNodeMap, $container, false, idPrefix, checkboxIdCounter));
+                  $treeWrapper.append(renderTree(settings.data, settings.callbacks, null, [], settings, idNodeMap, $container, false, idPrefix, checkboxIdCounter));
                   $container.append($treeWrapper);
                 }
               }, {
