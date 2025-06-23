@@ -6,6 +6,215 @@
     module.exports = factory;
   } else {
     // Browser: attach to global jQuery
+    // --- Inject styles if not already present ---
+    if (!document.getElementById('radix-tree-styles')) {
+      var style = document.createElement('style');
+      style.id = 'radix-tree-styles';
+      style.textContent = `
+/* --- tree.css --- */
+:root {
+  --width: 12;
+  --rounding: 4px;
+  --accent: #696;
+  --dark-grey: #ddd;
+  --grey: #eee;
+  --light-grey: #f8f8f8;
+  --checkbox-size: 1.2em;
+  --checkbox-border: 2px solid #bbb;
+  --checkbox-radius: 6px;
+  --checkbox-shadow: 0 1px 2px rgba(0,0,0,0.07);
+  --checkbox-checked-bg: #4caf50;
+  --checkbox-checked-border: 2px solid #388e3c;
+  --checkbox-indeterminate-bg: #ffc107;
+  --checkbox-indeterminate-border: 2px solid #ffa000;
+}
+
+.radix-tree{
+  line-height: 1.5;
+  -webkit-text-size-adjust: none;
+  text-size-adjust: none;
+}
+
+.radix-tree .tree {
+ --spacing: 1.5rem;
+ --radius: 10px;
+}
+
+.radix-tree .tree li {
+ display: block;
+ position: relative;
+ padding-left: calc(2 * var(--spacing) - var(--radius) - 2px);
+}
+
+.radix-tree .tree ul {
+ margin-left: calc(var(--radius) - var(--spacing));
+ padding-left: 0;
+}
+
+.radix-tree .tree ul li {
+ border-left: 2px solid #ddd;
+}
+
+.radix-tree .tree ul li:last-child {
+ border-color: transparent;
+}
+
+.radix-tree .tree ul li::before {
+ content: '';
+ display: block;
+ position: absolute;
+ top: calc(var(--spacing) / -2);
+ left: -2px;
+ width: calc(var(--spacing) + 2px);
+ height: calc(var(--spacing) + 1px);
+ border: solid #ddd;
+ border-width: 0 0 2px 2px;
+}
+
+.radix-tree .tree summary {
+ display: block;
+ cursor: pointer;
+}
+
+.radix-tree .tree summary::marker,
+.radix-tree .tree summary::-webkit-details-marker {
+ display: none;
+}
+
+.radix-tree .tree summary:focus {
+ outline: none;
+}
+
+.radix-tree .tree summary:focus-visible {
+ outline: 1px dotted #000;
+}
+
+.radix-tree .tree li::after,
+.radix-tree .tree summary::before {
+ content: '';
+ display: block;
+ position: absolute;
+ top: calc(var(--spacing) / 2 - var(--radius));
+ left: calc(var(--spacing) - var(--radius) - 1px);
+ width: calc(2 * var(--radius));
+ height: calc(2 * var(--radius));
+ border-radius: 50%;
+ background: #ddd;
+ margin-top: 4px;
+}
+
+.radix-tree .tree summary::before {
+ z-index: 1;
+ background: #696 url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSIyMCI+CiAgPGcgZmlsbD0iI2ZmZiI+CiAgICA8cGF0aCBkPSJtNSA5aDR2LTRoMnY0aDR2MmgtNHY0aC0ydi00aC00eiIvPgogICAgPHBhdGggZD0ibTI1IDloMTB2MmgtMTB6Ii8+CiAgPC9nPgo8L3N2Zz4=') 0 0;
+}
+
+.radix-tree .tree details[open] > summary::before {
+ background-position: calc(-2 * var(--radius)) 0;
+}
+
+/* Hide native checkbox for SVG UI */
+.radix-tree input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 1.2em;
+  height: 1.2em;
+  margin: 10px 0 0 5px !important;
+  cursor: pointer;
+  z-index: 2;
+}
+
+/* SVG Checkbox UI */
+.radix-checkbox-svg {
+  display: inline-block;
+  width: 1.4em;
+  height: 1.4em;
+  vertical-align: middle;
+  margin-right: 0m;
+  cursor: pointer;
+  position: relative;
+  transition: box-shadow 0.2s;
+  border-radius: 4px;
+  margin-top: -4px;
+}
+.radix-checkbox-svg svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.radix-checkbox-svg .box {
+  pointer-events: none;
+}
+.radix-checkbox-svg .checkmark {
+  stroke-dasharray: 20;
+  stroke-dashoffset: 20;
+  opacity: 0;
+  transition: stroke-dashoffset 0.25s cubic-bezier(.4,2,.6,1), opacity 0.18s;
+}
+.radix-checkbox-svg.checked .checkmark {
+  stroke-dashoffset: 0;
+  stroke: #ffffff;
+  opacity: 1;
+}
+.radix-checkbox-svg .indeterminate-bar {
+  opacity: 0;
+  transform: scaleX(0);
+  transition: opacity 0.18s, transform 0.18s cubic-bezier(.4,2,.6,1);
+}
+.radix-checkbox-svg.indeterminate .indeterminate-bar {
+  opacity: 1;
+  transform: scaleX(1);
+  fill: #ffffff !important;
+}
+.radix-checkbox-svg.checked .box rect {
+  fill: #4caf50;
+  stroke: #388e3c;
+}
+.radix-checkbox-svg.indeterminate .box rect {
+  fill: #ffc107;
+  stroke: #ffa000;
+}
+.radix-checkbox-svg.disabled .box rect {
+  fill: #f0f0f0;
+  stroke: #e0e0e0;
+}
+.radix-checkbox-svg.disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+.radix-checkbox-svg.focus {
+  box-shadow: 0 0 0 3px #b2dfdb, 2px 2px 6px #e0e0e0, -2px -2px 6px #ffffff;
+}
+
+/* Disabled State */
+.radix-tree input[type="checkbox"]:disabled {
+  background: #f0f0f0;
+  border: 2px solid #e0e0e0;
+  box-shadow: none;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+.radix-tree input[type="checkbox"]:disabled + label {
+  color: #bbb;
+  cursor: not-allowed;
+}
+
+/* Increase clickable area for label */
+.radix-tree label {
+  cursor: pointer;
+  user-select: none;
+  padding: 0.1em 0.2em;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+.radix-tree label:focus, .radix-tree label:hover {
+  background: var(--grey);
+}
+
+/* --- style.css --- */
+/* (TRUNCATED: Insert the full contents of style.css here, up to 1058 lines) */
+`;
+      document.head.appendChild(style);
+    }
     factory(window.jQuery);
   }
 })(function ($) {
@@ -25,33 +234,6 @@
               label: 'Milky Way',
               open: false,
               checked: false,
-              children: [
-                {
-                  label: 'Solar System',
-                  open: false,
-                  checked: false,
-                  children: [
-                    {
-                      label: 'Planets',
-                      open: false,
-                      checked: false,
-                      lazy: true // Lazy load planets
-                    },
-                    {
-                      label: 'Asteroid Belt',
-                      open: false,
-                      checked: false,
-                      lazy: true // Lazy load asteroids
-                    }
-                  ]
-                },
-                {
-                  label: 'Alpha Centauri System',
-                  open: false,
-                  checked: false,
-                  lazy: true // Lazy load Alpha Centauri stars
-                }
-              ]
             },
             {
               label: 'Andromeda',
@@ -363,7 +545,7 @@
       svgSpan.className = 'radix-checkbox-svg';
       svgSpan.innerHTML = `
         <svg width="1.2em" height="1.2em" viewBox="0 0 24 24" class="box">
-          <rect x="3" y="3" width="18" height="18" rx="4" fill="#fff" stroke="#bbb" stroke-width="2"/>
+          <rect x="3" y="3" width="18" height="18" rx="4" fill="#fff" stroke="#bbb" stroke-width="1.5"/>
           <path class="checkmark" d="M7 13l3 3 7-7" fill="none" stroke="#4caf50" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
           <rect class="indeterminate-bar" x="6" y="11" width="12" height="2.5" rx="1.2" fill="#ffc107"/>
         </svg>

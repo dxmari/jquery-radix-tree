@@ -14,7 +14,7 @@
 }
 
 
-body.dark {
+html .dark, body.dark {
   --bg: #18181b;
   --text: #e5e7eb;
   --sidebar-bg: #23272f;
@@ -26,6 +26,7 @@ body.dark {
 }
 html, body {
   height: 100%;
+  min-height: 100vh;
   margin: 0;
   padding: 0;
   font-family: var(--font-main);
@@ -35,8 +36,10 @@ html, body {
   font-style: normal;
   font-variation-settings: "wdth" 100;
 }
+
 body {
   min-height: 100vh;
+  height: 100vh;
   display: flex;
   flex-direction: column;
 }
@@ -73,14 +76,12 @@ body {
   background: var(--accent-light);
 }
 .container {
-  display: flex;
-  flex: 1 1 auto;
-  margin-top: var(--header-height);
-  min-height: 0;
+  width: 100%;
+  height: 100%;
 }
 .sidebar {
   width: 260px;
-  background: var(--sidebar-bg);
+  background: var(--bg);
   border-right: 1px solid var(--sidebar-border);
   box-sizing: border-box;
   padding: 2em 1.2em 2em 1.2em;
@@ -171,16 +172,25 @@ body {
   font-size: 1.3em;
   cursor: pointer;
 }
+.main section{
+  max-width: var(--main-max-width) !important;
+}
+
 .main {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
   margin-left: 260px;
   width: 100%;
-  max-width: var(--main-max-width);
+  max-width: calc(100% - 260px) !important;
   margin-right: auto;
   padding: 2.5em 2.5em 3em 2.5em;
   box-sizing: border-box;
   background: var(--bg);
-  min-height: 100vh;
-  flex: 1 1 auto;
+}
+.main > * {
+  flex-shrink: 0;
 }
 .main h1, .main h2, .main h3, .main h4 {
   color: var(--accent);
@@ -393,15 +403,15 @@ h2 { font-size: 1.5em; }
     padding: 0 0.5em 2em 0.5em;
   }
 }
-.hero {
+.main section.hero {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding-top: 5.5em;
-  padding-bottom: 4.5em;
-  max-width: 700px;
-  margin: 0 auto 2.5em auto;
+  padding: 5.5em 2em;
+  max-width: 950px !important;
+  margin: 100px auto 2.5em auto;
+  width: 100%;
   text-align: center;
   background: linear-gradient(90deg, rgba(56,142,60,0.04) 0%, rgba(76,175,80,0.03) 100%);
   border-radius: 1.5em;
@@ -475,6 +485,12 @@ h2 { font-size: 1.5em; }
   border-color: #256029;
 }
 
+.dark .hero-btn.secondary:hover, .dark .hero-btn.secondary:focus {
+  background: #256029;
+  color: #fff;
+  border-color: #256029;
+}
+
 .sidebar .nav div.sidebar-children{
   padding-top: 0px;
 }
@@ -515,21 +531,22 @@ h2 { font-size: 1.5em; }
   font-weight: 400;
 }
 .code-card {
-  background: #18181b;
+  background: #f1f1f1;
   border-radius: 6px;
   box-shadow: 0 2px 10px rgba(60,60,60,0.13);
   padding: 0;
   margin: 1.5em 0 0.7em 0;
+  color: #23272f;
   position: relative;
   overflow: hidden;
 }
 .code-card-header {
-  background: #23272f;
-  color: #fff;
+  background: #f6f3f4;
+  color: #23272f;
   font-size: 1em;
   font-weight: 600;
   padding: 16px 1.2em;
-  border-bottom: 1px solid #23272f;
+  border-bottom: 1px solid #ddd;
   display: flex;
   align-items: center;
   gap: 0.7em;
@@ -545,7 +562,7 @@ h2 { font-size: 1.5em; }
 }
 .code-block {
   background: none;
-  color: #e5e7eb;
+  color: #23272f;
   font-family: var(--font-mono);
   font-size: 1em;
   padding: 1.2em 1.5em 1.2em 1.5em;
@@ -556,10 +573,10 @@ h2 { font-size: 1.5em; }
 }
 .copy-btn {
   position: absolute;
-  top: 0.7em;
+  top: 0.9em;
   right: 1.2em;
-  background: #23272f;
-  color: #fff;
+  background: #f1f1f1;
+  color: #23272f;
   border: 1px solid #d1d5dc;
   border-radius: 5px;
   padding: 0.3em 0.8em;
@@ -688,6 +705,13 @@ h2 { font-size: 1.5em; }
 .faq-question:hover {
   background: #f7f8fa;
 }
+.dark .faq-question:hover {
+  background: #23272f;
+}
+.dark .faq-answer {
+  border-color: #515458;
+}
+
 .faq-question code {
   background: #f3f5f7;
   color: #2d3a4a;
@@ -845,7 +869,7 @@ h2 { font-size: 1.5em; }
 }
 
 .contributing-content .code-block {
-  background: #18181b;
+  background: #f1f1f1;
   border-radius: 6px;
   padding: 1em 1.5em;
   margin: 1em 0;
@@ -864,7 +888,7 @@ h2 { font-size: 1.5em; }
   border-left: 4px solid var(--accent);
   padding: 1em 1.5em;
   margin: 2em 0;
-  border-radius: 0 6px 6px 0;
+  border-radius: 6px;
 }
 
 .contributing-note p {
@@ -885,4 +909,150 @@ h2 { font-size: 1.5em; }
 }
 .text-center{
   text-align: center;
+}
+
+/* Utility classes for card backgrounds and borders */
+.card-bg {
+  background: var(--sidebar-bg);
+}
+.card-border {
+  border: 1.5px solid var(--sidebar-border);
+}
+
+/* 1. Ensure .main fills the available height */
+.main {
+  margin-left: 260px;
+  width: 100%;
+  max-width: var(--main-max-width);
+  margin-right: auto;
+  padding: 2.5em 2.5em 3em 2.5em;
+  box-sizing: border-box;
+  background: var(--bg);
+  min-height: calc(100vh - var(--header-height));
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 2. Card backgrounds and borders for both themes */
+.feature-card,
+.faq-card,
+.troubleshooting-item,
+.contributing-note {
+  background: var(--sidebar-bg);
+  border: 1.5px solid var(--sidebar-border);
+}
+
+.faq-card.open,
+.troubleshooting-item:hover {
+  box-shadow: 0 4px 16px rgba(60,60,60,0.10);
+  border-color: var(--accent);
+}
+
+/* 3. Text color fixes for dark mode */
+body.dark .feature-card .desc,
+body.dark .faq-answer,
+body.dark .troubleshooting-item p,
+body.dark .contributing-note p,
+body.dark .contributing-content li {
+  color: #e5e7eb;
+}
+body.dark .faq-answer,
+body.dark .troubleshooting-item,
+body.dark .contributing-note {
+  background: #23272f;
+}
+body.dark .faq-card {
+  background: #23272f;
+  border-color: #23272f;
+}
+body.dark .feature-card {
+  background: #23272f;
+  border-color: #23272f;
+}
+body.dark .output-card {
+  background: #23272f;
+}
+body.dark .code-card,
+body.dark .contributing-content .code-block {
+  background: #18181b;
+  color: #e5e7eb;
+}
+body.dark .code-card-header {
+  background: #23272f;
+  color: #e5e7eb;
+}
+body.dark .faq-question {
+  color: #e5e7eb;
+}
+body.dark .faq-question code,
+body.dark .troubleshooting-item code,
+body.dark .contributing-content code {
+  background: #23272f;
+  color: #b2dfdb;
+}
+body.dark .section-intro,
+body.dark .faq-desc {
+  color: #b2dfdb;
+}
+body.dark .section-title,
+body.dark .faq-title {
+  color: var(--accent);
+}
+
+/* 4. Ensure .main flexes to fill height, but content is top-aligned */
+.main > * {
+  flex-shrink: 0;
+}
+
+@media (max-width: 900px) {
+  .main {
+    padding: 0 1em 2em 1em;
+  }
+}
+@media (max-width: 700px) {
+  .main {
+    margin-left: 0;
+    padding: 0 0.5em 2em 0.5em;
+  }
+}
+
+.dark .features-section{
+  background: none !important;
+}
+
+.dark .tagline{
+  color: #f1f1f1 !important;
+}
+
+.dark .desc{
+  color: #ccc4c4;
+}
+
+.dark .feature-card .title{
+  color: #f1f1f1 !important;
+}
+
+.dark .feature-card .desc{
+  color: #ccc4c4 !important;
+}
+
+.dark .code-block{
+  color: #f1f1f1 !important;
+  background: #23272f !important;
+}
+
+.dark .code-card-header{
+  background: #141414 !important;
+  border-bottom: 1px solid #23272f !important;
+}
+
+.dark .copy-btn{
+  background: #23272f !important;
+  color: #f1f1f1 !important;
+}
+
+.dark .copy-btn:hover{
+  background: var(--accent) !important;
+  color: #f1f1f1 !important;
 }
