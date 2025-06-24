@@ -100,7 +100,7 @@
  height: calc(2 * var(--radius));
  border-radius: 50%;
  background: #ddd;
- margin-top: 4px;
+ margin-top: 0px;
 }
 
 .radix-tree .tree summary::before {
@@ -306,14 +306,22 @@
   }
 
   // Helper: generate unique id for each checkbox (now with idPrefix)
-  function generateCheckboxId(path, idPrefix, checkboxIdCounter) {
+  function generateCheckboxId(path, idPrefix, checkboxIdCounter, node) {
+    if (node && typeof node.id !== 'undefined' && node.id !== null) {
+      return idPrefix + '-checkbox-' + node.id;
+    }
     return idPrefix + '-checkbox-' + path.join('-') + '-' + (checkboxIdCounter++);
   }
 
   // Helper: build id->node map (now with idPrefix)
   function buildIdNodeMap(data, path = [], map = {}, parentId = null, idPrefix = '', checkboxIdCounter = { val: 0 }) {
     data.forEach((node, idx) => {
-      const id = idPrefix + '-checkbox-' + [...path, idx].join('-') + '-' + (checkboxIdCounter.val++);
+      let id;
+      if (typeof node.id !== 'undefined' && node.id !== null) {
+        id = idPrefix + '-checkbox-' + node.id;
+      } else {
+        id = idPrefix + '-checkbox-' + [...path, idx].join('-') + '-' + (checkboxIdCounter.val++);
+      }
       node._radixId = id;
       node._radixParentId = parentId;
       map[id] = node;
@@ -475,14 +483,19 @@
       // Propagate disabled state from parent
       const isDisabled = !!node.disabled || !!parentDisabled;
       // Checkbox with unique id
-      const checkboxId = generateCheckboxId([...path, idx], idPrefix, checkboxIdCounter.val);
-      checkboxIdCounter.val++;
-      node._radixId = idPrefix + '-checkbox-' + [...path, idx].join('-') + '-' + (checkboxIdCounter.val - 1);
+      const checkboxId = generateCheckboxId([...path, idx], idPrefix, checkboxIdCounter.val, node);
+      if (typeof node.id === 'undefined' || node.id === null) {
+        checkboxIdCounter.val++;
+      }
+      node._radixId = checkboxId;
       idNodeMap[node._radixId] = node;
       // Checkbox (visually hidden, accessible)
       const checkbox = document.createElement('input');
       checkbox.type = 'checkbox';
       checkbox.id = checkboxId;
+      if (typeof node.id !== 'undefined' && node.id !== null) {
+        checkbox.setAttribute('data-value', node.id);
+      }
       checkbox.checked = !!node.checked;
       checkbox.indeterminate = !!node.indeterminate;
       checkbox.tabIndex = 0;

@@ -1259,11 +1259,10 @@ body.dark .faq-title {
 }
 .testimonial-logo img {
   width: 120px;
-  height: 40px;
 }
 
 .testimonial-logo.effy img {
-  width: 100px;
+  width: 80px;
 }
 
 .testimonial-content {
@@ -1342,4 +1341,8 @@ body.dark .faq-title {
 
 .dark .testimonial-person{
   color: #ccc4c4 !important;
+}
+
+.radix-tree .tree li::after, .radix-tree .tree summary::before{
+  margin-top: 2px !important;
 }

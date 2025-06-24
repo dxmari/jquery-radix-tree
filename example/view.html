@@ -7,8 +7,9 @@
   <title>Document</title>
   <script src="https://code.jquery.com/jquery-3.7.1.slim.min.js"
     integrity="sha256-kmHvs0B+OpCW5GVHUNjv9rOmY0IvSIRcf7zGUDTDQM8=" crossorigin="anonymous"></script>
-  <script src="../tree.js"></script>
-  <!-- <link rel="stylesheet" href="tree.css"> -->
+  <!-- <script src="../tree.js"></script> -->
+  <script src="../tree.min.js"></script>
+
   <style>
     html {
       height: 100%;
@@ -213,8 +214,962 @@
       //   lazyLoadDelay: 800
       // });
 
+      const rawData = [{
+        "employee_name": "Pedro Manderin",
+        "employee_id": 1,
+        "manager_id": 304,
+        "no_employees": false,
+        "children": [
+          {
+            "employee_name": "Gustavo Nicolas",
+            "employee_id": 1180,
+            "manager_id": 853,
+            "children": [],
+            "no_employees": true
+          },
+          {
+            "employee_name": "Carmen Frami",
+            "employee_id": 1030,
+            "manager_id": 3,
+            "children": [],
+            "no_employees": true
+          },
+          {
+            "employee_name": "Emmitt Ortiz",
+            "employee_id": 304,
+            "manager_id": 3,
+            "children": [
+              {
+                "employee_name": "Cory Kunde",
+                "employee_id": 215,
+                "manager_id": 304,
+                "children": [],
+                "no_employees": true
+              },
+              {
+                "employee_name": "Gaston Predovic",
+                "employee_id": 233,
+                "manager_id": 304,
+                "children": [],
+                "no_employees": false
+              },
+              {
+                "employee_name": "Glenn Marvin",
+                "employee_id": 882,
+                "manager_id": 304,
+                "children": [],
+                "no_employees": true
+              },
+              {
+                "employee_name": "Julietta Spinka",
+                "employee_id": 259,
+                "manager_id": 304,
+                "children": [],
+                "no_employees": false
+              },
+              {
+                "employee_name": "Karyl Ziemann",
+                "employee_id": 1102,
+                "manager_id": 304,
+                "children": [],
+                "no_employees": true
+              }
+            ],
+            "no_employees": false
+          },
+          {
+            "employee_name": "Fredric Sawayn",
+            "employee_id": 4,
+            "manager_id": 3,
+            "children": [
+              {
+                "employee_name": "Adolph Yundt",
+                "employee_id": 439,
+                "manager_id": 4,
+                "children": [],
+                "no_employees": false
+              },
+              {
+                "employee_name": "Antoine Hilpert",
+                "employee_id": 707,
+                "manager_id": 4,
+                "children": [],
+                "no_employees": false
+              },
+              {
+                "employee_name": "Darrel Bogan",
+                "employee_id": 537,
+                "manager_id": 4,
+                "children": [],
+                "no_employees": false
+              },
+              {
+                "employee_name": "Flora Cremin",
+                "employee_id": 519,
+                "manager_id": 4,
+                "children": [],
+                "no_employees": true
+              },
+              {
+                "employee_name": "Geoffrey Monahan",
+                "employee_id": 672,
+                "manager_id": 4,
+                "children": [],
+                "no_employees": false
+              },
+              {
+                "employee_name": "Gerard Reynolds",
+                "employee_id": 676,
+                "manager_id": 4,
+                "children": [],
+                "no_employees": true
+              },
+              {
+                "employee_name": "Kristopher Ankunding",
+                "employee_id": 38,
+                "manager_id": 4,
+                "children": [],
+                "no_employees": true
+              },
+              {
+                "employee_name": "Nada McGlynn",
+                "employee_id": 113,
+                "manager_id": 4,
+                "children": [],
+                "no_employees": false
+              },
+              {
+                "employee_name": "Robby Kerluke",
+                "employee_id": 266,
+                "manager_id": 4,
+                "children": [],
+                "no_employees": false
+              },
+              {
+                "employee_name": "Stacy Pagac",
+                "employee_id": 706,
+                "manager_id": 4,
+                "children": [],
+                "no_employees": true
+              },
+              {
+                "employee_name": "Willard Gibson",
+                "employee_id": 693,
+                "manager_id": 4,
+                "children": [],
+                "no_employees": false
+              }
+            ],
+            "no_employees": false
+          },
+          {
+            "employee_name": "Jayson Gibson",
+            "employee_id": 173,
+            "manager_id": 3,
+            "children": [
+              {
+                "employee_name": "Chauncey Marquardt",
+                "employee_id": 996,
+                "manager_id": 173,
+                "children": [],
+                "no_employees": true
+              },
+              {
+                "employee_name": "Heath Mante",
+                "employee_id": 680,
+                "manager_id": 173,
+                "children": [],
+                "no_employees": false
+              },
+              {
+                "employee_name": "Robbin Dibbert",
+                "employee_id": 143,
+                "manager_id": 173,
+                "children": [],
+                "no_employees": true
+              },
+              {
+                "employee_name": "Samual Emard",
+                "employee_id": 302,
+                "manager_id": 173,
+                "children": [],
+                "no_employees": false
+              },
+              {
+                "employee_name": "Shanita Lueilwitz",
+                "employee_id": 490,
+                "manager_id": 173,
+                "children": [],
+                "no_employees": false
+              }
+            ],
+            "no_employees": false
+          },
+          {
+            "employee_name": "Jessica Davis",
+            "employee_id": 14,
+            "manager_id": 3,
+            "children": [
+              {
+                "employee_name": "Alan Hirthe",
+                "employee_id": 548,
+                "manager_id": 14,
+                "children": [],
+                "no_employees": false
+              },
+              {
+                "employee_name": "Alethea Labadie",
+                "employee_id": 328,
+                "manager_id": 14,
+                "children": [],
+                "no_employees": false
+              },
+              {
+                "employee_name": "Bernardo Waelchi",
+                "employee_id": 416,
+                "manager_id": 14,
+                "children": [],
+                "no_employees": false
+              },
+              {
+                "employee_name": "Bronwyn Hane",
+                "employee_id": 170,
+                "manager_id": 14,
+                "children": [],
+                "no_employees": false
+              },
+              {
+                "employee_name": "Carmine Donnelly",
+                "employee_id": 241,
+                "manager_id": 14,
+                "children": [],
+                "no_employees": false
+              },
+              {
+                "employee_name": "Charlyn Walker",
+                "employee_id": 223,
+                "manager_id": 14,
+                "children": [],
+                "no_employees": true
+              },
+              {
+                "employee_name": "Clarence Rohan",
+                "employee_id": 800,
+                "manager_id": 14,
+                "children": [],
+                "no_employees": false
+              },
+              {
+                "employee_name": "Dusty Gerhold",
+                "employee_id": 86,
+                "manager_id": 14,
+                "children": [],
+                "no_employees": false
+              },
+              {
+                "employee_name": "Gerda Paucek",
+                "employee_id": 695,
+                "manager_id": 14,
+                "children": [],
+                "no_employees": true
+              },
+              {
+                "employee_name": "Hope Goldner",
+                "employee_id": 404,
+                "manager_id": 14,
+                "children": [],
+                "no_employees": false
+              },
+              {
+                "employee_name": "Irving Schumm",
+                "employee_id": 582,
+                "manager_id": 14,
+                "children": [],
+                "no_employees": true
+              },
+              {
+                "employee_name": "Israel Skiles",
+                "employee_id": 16,
+                "manager_id": 14,
+                "children": [],
+                "no_employees": false
+              },
+              {
+                "employee_name": "Jason Will",
+                "employee_id": 32,
+                "manager_id": 14,
+                "children": [],
+                "no_employees": false
+              },
+              {
+                "employee_name": "Jude Reichel",
+                "employee_id": 847,
+                "manager_id": 14,
+                "children": [],
+                "no_employees": false
+              },
+              {
+                "employee_name": "Kurt Hamill",
+                "employee_id": 299,
+                "manager_id": 14,
+                "children": [],
+                "no_employees": true
+              },
+              {
+                "employee_name": "Lakita Wintheiser",
+                "employee_id": 501,
+                "manager_id": 14,
+                "children": [],
+                "no_employees": true
+              },
+              {
+                "employee_name": "Lavonda Cole",
+                "employee_id": 96,
+                "manager_id": 14,
+                "children": [],
+                "no_employees": true
+              },
+              {
+                "employee_name": "Lino Stamm",
+                "employee_id": 566,
+                "manager_id": 14,
+                "children": [],
+                "no_employees": true
+              },
+              {
+                "employee_name": "Milda Kutch",
+                "employee_id": 602,
+                "manager_id": 14,
+                "children": [],
+                "no_employees": false
+              },
+              {
+                "employee_name": "Norris Gorczany",
+                "employee_id": 13,
+                "manager_id": 14,
+                "children": [],
+                "no_employees": false
+              },
+              {
+                "employee_name": "Patrick Lockman",
+                "employee_id": 465,
+                "manager_id": 14,
+                "children": [],
+                "no_employees": false
+              },
+              {
+                "employee_name": "Ramiro Nitzsche",
+                "employee_id": 798,
+                "manager_id": 14,
+                "children": [],
+                "no_employees": false
+              },
+              {
+                "employee_name": "Reinaldo Pacocha",
+                "employee_id": 260,
+                "manager_id": 14,
+                "children": [],
+                "no_employees": true
+              },
+              {
+                "employee_name": "Ricardo Feeney",
+                "employee_id": 58,
+                "manager_id": 14,
+                "children": [],
+                "no_employees": false
+              },
+              {
+                "employee_name": "Robbie Upton",
+                "employee_id": 1144,
+                "manager_id": 14,
+                "children": [],
+                "no_employees": false
+              },
+              {
+                "employee_name": "Rosetta Daugherty",
+                "employee_id": 554,
+                "manager_id": 14,
+                "children": [],
+                "no_employees": true
+              },
+              {
+                "employee_name": "Theron Fritsch",
+                "employee_id": 176,
+                "manager_id": 14,
+                "children": [],
+                "no_employees": false
+              },
+              {
+                "employee_name": "Trevor Kuhlman",
+                "employee_id": 749,
+                "manager_id": 14,
+                "children": [],
+                "no_employees": false
+              },
+              {
+                "employee_name": "Wilfredo Bayer",
+                "employee_id": 157,
+                "manager_id": 14,
+                "children": [],
+                "no_employees": true
+              }
+            ],
+            "no_employees": false
+          },
+          {
+            "employee_name": "Jovita Christiansen",
+            "employee_id": 485,
+            "manager_id": 3,
+            "children": [],
+            "no_employees": true
+          },
+          {
+            "employee_name": "Berenice Corkery",
+            "employee_id": 1158,
+            "manager_id": 981,
+            "children": [],
+            "no_employees": true
+          },
+          {
+            "employee_name": "Chin Boyer",
+            "employee_id": 1059,
+            "manager_id": 981,
+            "children": [],
+            "no_employees": true
+          },
+          {
+            "employee_name": "Hunter Kertzmann",
+            "employee_id": 1119,
+            "manager_id": 981,
+            "children": [],
+            "no_employees": true
+          },
+          {
+            "employee_name": "Hugh Little",
+            "employee_id": 917,
+            "manager_id": 754,
+            "children": [],
+            "no_employees": true
+          },
+          {
+            "employee_name": "Mitchel Nader",
+            "employee_id": 1000,
+            "manager_id": 754,
+            "children": [],
+            "no_employees": true
+          },
+          {
+            "employee_name": "Carol Morar",
+            "employee_id": 926,
+            "manager_id": 224,
+            "children": [
+              {
+                "employee_name": "Robt Veum",
+                "employee_id": 1141,
+                "manager_id": 926,
+                "children": [],
+                "no_employees": true
+              }
+            ],
+            "no_employees": false
+          },
+          {
+            "employee_name": "Dean Paucek",
+            "employee_id": 902,
+            "manager_id": 224,
+            "children": [],
+            "no_employees": true
+          },
+          {
+            "employee_name": "Fletcher Oberbrunner",
+            "employee_id": 1126,
+            "manager_id": 224,
+            "children": [],
+            "no_employees": true
+          },
+          {
+            "employee_name": "Hassan Williamson",
+            "employee_id": 863,
+            "manager_id": 224,
+            "children": [],
+            "no_employees": true
+          },
+          {
+            "employee_name": "Hershel Brekke",
+            "employee_id": 310,
+            "manager_id": 224,
+            "children": [
+              {
+                "employee_name": "Jefferson Renner",
+                "employee_id": 145,
+                "manager_id": 310,
+                "children": [],
+                "no_employees": true
+              },
+              {
+                "employee_name": "Nolan Blanda",
+                "employee_id": 430,
+                "manager_id": 310,
+                "children": [],
+                "no_employees": true
+              }
+            ],
+            "no_employees": false
+          },
+          {
+            "employee_name": "Jerrell White",
+            "employee_id": 820,
+            "manager_id": 224,
+            "children": [
+              {
+                "employee_name": "Winford Harber",
+                "employee_id": 1137,
+                "manager_id": 820,
+                "children": [],
+                "no_employees": true
+              }
+            ],
+            "no_employees": false
+          },
+          {
+            "employee_name": "Jesse Simonis",
+            "employee_id": 822,
+            "manager_id": 224,
+            "children": [
+              {
+                "employee_name": "Barney Kassulke",
+                "employee_id": 938,
+                "manager_id": 822,
+                "children": [],
+                "no_employees": true
+              },
+              {
+                "employee_name": "Jarred Reinger",
+                "employee_id": 937,
+                "manager_id": 822,
+                "children": [],
+                "no_employees": true
+              },
+              {
+                "employee_name": "Michael Kshlerin",
+                "employee_id": 1188,
+                "manager_id": 822,
+                "children": [],
+                "no_employees": true
+              },
+              {
+                "employee_name": "Shaun Nitzsche",
+                "employee_id": 906,
+                "manager_id": 822,
+                "children": [],
+                "no_employees": true
+              }
+            ],
+            "no_employees": false
+          },
+          {
+            "employee_name": "Kendrick Johns",
+            "employee_id": 356,
+            "manager_id": 224,
+            "children": [
+              {
+                "employee_name": "Andre Hand",
+                "employee_id": 252,
+                "manager_id": 356,
+                "children": [],
+                "no_employees": true
+              },
+              {
+                "employee_name": "Corey Gutkowski",
+                "employee_id": 338,
+                "manager_id": 356,
+                "children": [],
+                "no_employees": true
+              },
+              {
+                "employee_name": "Garland Halvorson",
+                "employee_id": 407,
+                "manager_id": 356,
+                "children": [],
+                "no_employees": true
+              },
+              {
+                "employee_name": "Rodrick Bruen",
+                "employee_id": 509,
+                "manager_id": 356,
+                "children": [],
+                "no_employees": true
+              }
+            ],
+            "no_employees": false
+          },
+          {
+            "employee_name": "Kent Donnelly",
+            "employee_id": 316,
+            "manager_id": 224,
+            "children": [
+              {
+                "employee_name": "Angelo Mertz",
+                "employee_id": 805,
+                "manager_id": 316,
+                "children": [],
+                "no_employees": true
+              },
+              {
+                "employee_name": "Antony Swaniawski",
+                "employee_id": 806,
+                "manager_id": 316,
+                "children": [],
+                "no_employees": true
+              },
+              {
+                "employee_name": "Laverne Upton",
+                "employee_id": 238,
+                "manager_id": 316,
+                "children": [],
+                "no_employees": true
+              },
+              {
+                "employee_name": "Monroe Klein",
+                "employee_id": 178,
+                "manager_id": 316,
+                "children": [],
+                "no_employees": true
+              },
+              {
+                "employee_name": "Royal Wehner",
+                "employee_id": 315,
+                "manager_id": 316,
+                "children": [],
+                "no_employees": true
+              }
+            ],
+            "no_employees": false
+          },
+          {
+            "employee_name": "Kevin Gibson",
+            "employee_id": 541,
+            "manager_id": 224,
+            "children": [],
+            "no_employees": true
+          },
+          {
+            "employee_name": "Lorenzo Willms",
+            "employee_id": 523,
+            "manager_id": 224,
+            "children": [],
+            "no_employees": true
+          },
+          {
+            "employee_name": "Olin Klocko",
+            "employee_id": 309,
+            "manager_id": 224,
+            "children": [
+              {
+                "employee_name": "Bobby Koelpin",
+                "employee_id": 392,
+                "manager_id": 309,
+                "children": [],
+                "no_employees": true
+              },
+              {
+                "employee_name": "Kasey Russel",
+                "employee_id": 886,
+                "manager_id": 309,
+                "children": [],
+                "no_employees": true
+              },
+              {
+                "employee_name": "Luke Koss",
+                "employee_id": 396,
+                "manager_id": 309,
+                "children": [],
+                "no_employees": true
+              },
+              {
+                "employee_name": "Lyndon Gibson",
+                "employee_id": 528,
+                "manager_id": 309,
+                "children": [],
+                "no_employees": true
+              },
+              {
+                "employee_name": "Millard Wehner",
+                "employee_id": 365,
+                "manager_id": 309,
+                "children": [],
+                "no_employees": true
+              }
+            ],
+            "no_employees": false
+          },
+          {
+            "employee_name": "Rex Towne",
+            "employee_id": 986,
+            "manager_id": 224,
+            "children": [],
+            "no_employees": true
+          },
+          {
+            "employee_name": "Sheldon Senger",
+            "employee_id": 819,
+            "manager_id": 224,
+            "children": [],
+            "no_employees": true
+          },
+          {
+            "employee_name": "Bradford Dietrich",
+            "employee_id": 963,
+            "manager_id": 741,
+            "children": [],
+            "no_employees": true
+          },
+          {
+            "employee_name": "Cletus Kris",
+            "employee_id": 874,
+            "manager_id": 741,
+            "children": [],
+            "no_employees": true
+          },
+          {
+            "employee_name": "Lamont Johnston",
+            "employee_id": 1181,
+            "manager_id": 741,
+            "children": [],
+            "no_employees": true
+          },
+          {
+            "employee_name": "Denny Stokes",
+            "employee_id": 1148,
+            "manager_id": 921,
+            "children": [],
+            "no_employees": true
+          },
+          {
+            "employee_name": "Franklin Blick",
+            "employee_id": 1023,
+            "manager_id": 921,
+            "children": [],
+            "no_employees": true
+          },
+          {
+            "employee_name": "Huey Upton",
+            "employee_id": 1108,
+            "manager_id": 921,
+            "children": [],
+            "no_employees": true
+          },
+          {
+            "employee_name": "Kennith King",
+            "employee_id": 1154,
+            "manager_id": 921,
+            "children": [
+              {
+                "employee_name": "Sol Jakubowski",
+                "employee_id": 1167,
+                "manager_id": 1154,
+                "children": [],
+                "no_employees": true
+              }
+            ],
+            "no_employees": false
+          },
+          {
+            "employee_name": "Leo Homenick",
+            "employee_id": 1068,
+            "manager_id": 921,
+            "children": [],
+            "no_employees": true
+          },
+          {
+            "employee_name": "Phillip Kreiger",
+            "employee_id": 994,
+            "manager_id": 921,
+            "children": [
+              {
+                "employee_name": "Mickey Fahey",
+                "employee_id": 989,
+                "manager_id": 994,
+                "children": [],
+                "no_employees": true
+              }
+            ],
+            "no_employees": false
+          },
+          {
+            "employee_name": "Rodrigo Gorczany",
+            "employee_id": 1098,
+            "manager_id": 921,
+            "children": [],
+            "no_employees": true
+          },
+          {
+            "employee_name": "Terry McLaughlin",
+            "employee_id": 1149,
+            "manager_id": 921,
+            "children": [],
+            "no_employees": true
+          },
+          {
+            "employee_name": "Brice O'Conner",
+            "employee_id": 892,
+            "manager_id": 829,
+            "children": [],
+            "no_employees": true
+          },
+          {
+            "employee_name": "Jamie Ward",
+            "employee_id": 251,
+            "manager_id": 56,
+            "children": [
+              {
+                "employee_name": "Barry Waelchi",
+                "employee_id": 633,
+                "manager_id": 251,
+                "children": [],
+                "no_employees": true
+              },
+              {
+                "employee_name": "Benjamin Kozey",
+                "employee_id": 928,
+                "manager_id": 251,
+                "children": [],
+                "no_employees": true
+              },
+              {
+                "employee_name": "Clark Gibson",
+                "employee_id": 535,
+                "manager_id": 251,
+                "children": [],
+                "no_employees": true
+              },
+              {
+                "employee_name": "Jacques Emard",
+                "employee_id": 452,
+                "manager_id": 251,
+                "children": [],
+                "no_employees": true
+              },
+              {
+                "employee_name": "Kendrick Thompson",
+                "employee_id": 590,
+                "manager_id": 251,
+                "children": [],
+                "no_employees": true
+              },
+              {
+                "employee_name": "Milan Medhurst",
+                "employee_id": 491,
+                "manager_id": 251,
+                "children": [],
+                "no_employees": true
+              }
+            ],
+            "no_employees": false
+          },
+          {
+            "employee_name": "Jeremiah Abernathy",
+            "employee_id": 762,
+            "manager_id": 56,
+            "children": [],
+            "no_employees": true
+          },
+          {
+            "employee_name": "Josue Wuckert",
+            "employee_id": 1034,
+            "manager_id": 56,
+            "children": [],
+            "no_employees": true
+          },
+          {
+            "employee_name": "Marc Hansen",
+            "employee_id": 838,
+            "manager_id": 56,
+            "children": [],
+            "no_employees": true
+          },
+          {
+            "employee_name": "Morton Lueilwitz",
+            "employee_id": 821,
+            "manager_id": 56,
+            "children": [],
+            "no_employees": true
+          },
+          {
+            "employee_name": "Rueben Kovacek",
+            "employee_id": 55,
+            "manager_id": 56,
+            "children": [
+              {
+                "employee_name": "Bernie Will",
+                "employee_id": 581,
+                "manager_id": 55,
+                "children": [],
+                "no_employees": true
+              },
+              {
+                "employee_name": "Collin Collier",
+                "employee_id": 694,
+                "manager_id": 55,
+                "children": [],
+                "no_employees": true
+              },
+              {
+                "employee_name": "Denny Jerde",
+                "employee_id": 231,
+                "manager_id": 55,
+                "children": [],
+                "no_employees": true
+              },
+              {
+                "employee_name": "Pete Bahringer",
+                "employee_id": 469,
+                "manager_id": 55,
+                "children": [],
+                "no_employees": true
+              }
+            ],
+            "no_employees": false
+          }
+        ]
+      }]
+      const expectedData = [
+        {
+          label: 'Universe',
+          open: true,
+          id: 1,
+          children: [
+            {
+              label: 'Galaxies', open: true,
+              children: [{ label: 'Milky Way', id: 2 },
+              { label: 'Andromeda', id: 3 }]
+            },
+            { id: 4, label: 'Black Holes' }
+          ]
+        }
+      ];
+
+      // Convert rawData to Radix Tree format
+      function convertToRadix(node) {
+        return {
+          label: node.employee_name,
+          // open: !node.no_employees,
+          id: node.employee_id,
+          children: node.children.map(convertToRadix)
+        };
+      }
+      // rawData has multiple nested children, so we have to traverse till the end of empty children each object & convert it it into the radix data format, write a new function below the rawdata.forEach function?
+      const cdata = rawData.map(convertToRadix);
+
+
       $('.demo-tree').radixTree({
-        data: data
+        data: cdata,
+        onClick: function (node, element) {
+          console.log('Clicked:', node.label);
+        },
+        onCheck: function (node, checkbox) {
+          console.log('Checked:', node.label, checkbox.checked);
+        }
       })
     });
   </script>
