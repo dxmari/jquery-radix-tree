@@ -839,6 +839,11 @@
         case 'getChecked':
           // Return array of checked nodes (with id)
           const checked = [];
+          // Rebuild idNodeMap with current settings to ensure IDs match
+          const idPrefix = $container.data('radixTreeIdPrefix');
+          const checkboxIdCounter = { val: 0 };
+          const currentIdNodeMap = buildIdNodeMap(settings.data, [], {}, null, idPrefix, checkboxIdCounter);
+          
           function collectChecked(nodes) {
             nodes.forEach(node => {
               if (node.checked) checked.push({ id: node._radixId, label: node.label, node });
