@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animated Loading Indicator Demo</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="../tree.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 20px;
+            background: #f8f9fa;
+        }
+        .demo-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .demo-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            background: #fafbfc;
+        }
+        .demo-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 15px;
+        }
+        .demo-description {
+            color: #6c757d;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        .tree-container {
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 15px;
+            background: white;
+            min-height: 200px;
+        }
+        .instructions {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .instructions h4 {
+            margin: 0 0 10px 0;
+            color: #1976d2;
+        }
+        .instructions ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .instructions li {
+            margin: 5px 0;
+            color: #424242;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <h1>🎯 Animated Loading Indicator Demo</h1>
+        
+        <div class="demo-section">
+            <div class="demo-title">✨ Lazy Loading with Animated Spinner</div>
+            <div class="demo-description">
+                Expand nodes with lazy loading to see the new animated spinner instead of plain "Loading..." text.
+            </div>
+            <div class="instructions">
+                <h4>How to test:</h4>
+                <ul>
+                    <li>Click on any node with a chevron (▶️) to expand it</li>
+                    <li>Watch the beautiful animated spinner appear</li>
+                    <li>The spinner will show while content is being loaded</li>
+                </ul>
+            </div>
+            <div class="tree-container" id="lazy-demo"></div>
+        </div>
+
+        <div class="demo-section">
+            <div class="demo-title">🔄 Infinite Scroll with Animated Loading</div>
+            <div class="demo-description">
+                Scroll down in the tree to trigger infinite loading and see the animated "Loading more..." indicator.
+            </div>
+            <div class="instructions">
+                <h4>How to test:</h4>
+                <ul>
+                    <li>Expand the "Infinite Scroll Demo" node</li>
+                    <li>Scroll down in the tree container</li>
+                    <li>Watch the animated "Loading more..." indicator appear at the bottom</li>
+                </ul>
+            </div>
+            <div class="tree-container" id="infinite-demo"></div>
+        </div>
+
+        <div class="demo-section">
+            <div class="demo-title">🎨 Custom Loading Text Examples</div>
+            <div class="demo-description">
+                Different examples of custom loading text for various use cases.
+            </div>
+            <div class="instructions">
+                <h4>Loading Text Options:</h4>
+                <ul>
+                    <li><strong>Default:</strong> "Loading more..."</li>
+                    <li><strong>Custom:</strong> Set <code>loadingText</code> in tree options</li>
+                    <li><strong>Emojis:</strong> Add visual indicators like 🔄, 📥, ⏳</li>
+                    <li><strong>Localized:</strong> Use different languages or contexts</li>
+                </ul>
+            </div>
+            <div class="tree-container" id="custom-text-demo"></div>
+        </div>
+    </div>
+
+    <script>
+        // Lazy Loading Demo
+        const lazyData = [
+            {
+                label: '📁 Projects',
+                open: true,
+                children: [
+                    { label: '🎨 Frontend', lazy: true },
+                    { label: '⚙️ Backend', lazy: true },
+                    { label: '📱 Mobile', lazy: true },
+                    { label: '🧪 Testing', lazy: true }
+                ]
+            }
+        ];
+
+        $('#lazy-demo').radixTree({
+            data: lazyData,
+            loadingText: '🔄 Loading content...',
+            lazyLoad: function(node, done) {
+                console.log('Loading:', node.label);
+                // Simulate API delay
+                setTimeout(() => {
+                    let children = [];
+                    switch (node.label) {
+                        case '🎨 Frontend':
+                            children = [
+                                { label: 'React Components', lazy: true },
+                                { label: 'Vue Templates', lazy: true },
+                                { label: 'Angular Modules', lazy: true }
+                            ];
+                            break;
+                        case '⚙️ Backend':
+                            children = [
+                                { label: 'API Endpoints', lazy: true },
+                                { label: 'Database Models', lazy: true },
+                                { label: 'Authentication', lazy: true }
+                            ];
+                            break;
+                        case '📱 Mobile':
+                            children = [
+                                { label: 'iOS Screens', lazy: true },
+                                { label: 'Android Activities', lazy: true },
+                                { label: 'React Native', lazy: true }
+                            ];
+                            break;
+                        case '🧪 Testing':
+                            children = [
+                                { label: 'Unit Tests', lazy: true },
+                                { label: 'Integration Tests', lazy: true },
+                                { label: 'E2E Tests', lazy: true }
+                            ];
+                            break;
+                        default:
+                            children = [
+                                { label: 'Sub-item 1' },
+                                { label: 'Sub-item 2' },
+                                { label: 'Sub-item 3' }
+                            ];
+                    }
+                    done(children);
+                }, 1500); // 1.5 second delay to show the spinner
+            }
+        });
+
+        // Infinite Scroll Demo
+        const infiniteData = [
+            {
+                label: '🔄 Infinite Scroll Demo',
+                open: true,
+                infinite: true,
+                pageSize: 15,
+                children: []
+            }
+        ];
+
+        $('#infinite-demo').radixTree({
+            data: infiniteData,
+            loadingText: '📥 Loading more items...',
+            lazyLoad: function(node, done, options) {
+                console.log('Loading page:', options.page);
+                // Simulate API delay
+                setTimeout(() => {
+                    const page = options.page;
+                    const pageSize = options.pageSize;
+                    const start = (page - 1) * pageSize;
+                    
+                    let children = [];
+                    for (let i = 0; i < pageSize; i++) {
+                        const itemNum = start + i + 1;
+                        children.push({
+                            label: `Item ${itemNum}`,
+                            badge: Math.floor(Math.random() * 10) + 1
+                        });
+                    }
+                    
+                    // Simulate having more data for first few pages
+                    const hasMore = page < 4;
+                    done(children, hasMore);
+                }, 1200); // 1.2 second delay
+            }
+        });
+
+        // Custom Loading Text Demo
+        const customTextData = [
+            {
+                label: '🌍 International Examples',
+                open: true,
+                children: [
+                    { label: '🇺🇸 English', lazy: true },
+                    { label: '🇪🇸 Spanish', lazy: true },
+                    { label: '🇫🇷 French', lazy: true },
+                    { label: '🇩🇪 German', lazy: true }
+                ]
+            }
+        ];
+
+        $('#custom-text-demo').radixTree({
+            data: customTextData,
+            loadingText: '⏳ Please wait...',
+            lazyLoad: function(node, done) {
+                console.log('Loading:', node.label);
+                setTimeout(() => {
+                    let children = [];
+                    let loadingText = '⏳ Please wait...';
+                    
+                    switch (node.label) {
+                        case '🇺🇸 English':
+                            children = [
+                                { label: 'Loading files...' },
+                                { label: 'Processing data...' },
+                                { label: 'Almost done...' }
+                            ];
+                            loadingText = '🔄 Loading files...';
+                            break;
+                        case '🇪🇸 Spanish':
+                            children = [
+                                { label: 'Cargando archivos...' },
+                                { label: 'Procesando datos...' },
+                                { label: 'Casi terminado...' }
+                            ];
+                            loadingText = '📂 Cargando archivos...';
+                            break;
+                        case '🇫🇷 French':
+                            children = [
+                                { label: 'Chargement des fichiers...' },
+                                { label: 'Traitement des données...' },
+                                { label: 'Presque terminé...' }
+                            ];
+                            loadingText = '📁 Chargement...';
+                            break;
+                        case '🇩🇪 German':
+                            children = [
+                                { label: 'Dateien werden geladen...' },
+                                { label: 'Daten werden verarbeitet...' },
+                                { label: 'Fast fertig...' }
+                            ];
+                            loadingText = '📋 Wird geladen...';
+                            break;
+                    }
+                    
+                    // Update loading text for this specific node
+                    const $container = $('#custom-text-demo');
+                    const settings = $container.data('radixTreeSettings');
+                    if (settings) {
+                        settings.loadingText = loadingText;
+                    }
+                    
+                    done(children);
+                }, 2000); // 2 second delay
+            }
+        });
+    </script>
+</body>
+</html> 

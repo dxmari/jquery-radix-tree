@@ -218,56 +218,12 @@
     factory(window.jQuery);
   }
 })(function ($) {
-  // Complex default data with 5+ levels, multiple nodes, and lazy loading
+  // Simple default data - just one node
   const defaultData = [
     {
-      label: 'Universe',
+      label: 'Root',
       open: true,
-      checked: false,
-      children: [
-        {
-          label: 'Galaxies',
-          open: true,
-          checked: false,
-          children: [
-            {
-              label: 'Milky Way',
-              open: false,
-              checked: false,
-            },
-            {
-              label: 'Andromeda',
-              open: false,
-              checked: false,
-              lazy: true // Lazy load Andromeda star systems
-            }
-          ]
-        },
-        {
-          label: 'Black Holes',
-          open: false,
-          checked: false,
-          children: [
-            { label: 'Supermassive', open: false, checked: false, lazy: true },
-            { label: 'Stellar-mass', open: false, checked: false, lazy: true }
-          ]
-        },
-        {
-          label: 'Nebulae',
-          open: false,
-          checked: false,
-          lazy: true // Lazy load nebulae
-        }
-      ]
-    },
-    {
-      label: 'Multiverse',
-      open: false,
-      checked: false,
-      children: [
-        { label: 'Parallel Universe 1', checked: false, lazy: true },
-        { label: 'Parallel Universe 2', open: false, checked: false, lazy: true }
-      ]
+      checked: false
     }
   ];
 
@@ -330,6 +286,10 @@
 
   // Helper: generate unique id for each checkbox (now with idPrefix)
   function generateCheckboxId(path, idPrefix, checkboxIdCounter, node) {
+    // Priority: nodeId (database-friendly) > id (legacy) > auto-generated
+    if (node && typeof node.nodeId !== 'undefined' && node.nodeId !== null) {
+      return idPrefix + '-checkbox-' + node.nodeId;
+    }
     if (node && typeof node.id !== 'undefined' && node.id !== null) {
       return idPrefix + '-checkbox-' + node.id;
     }
@@ -340,7 +300,10 @@
   function buildIdNodeMap(data, path = [], map = {}, parentId = null, idPrefix = '', checkboxIdCounter = { val: 0 }) {
     data.forEach((node, idx) => {
       let id;
-      if (typeof node.id !== 'undefined' && node.id !== null) {
+      // Priority: nodeId (database-friendly) > id (legacy) > auto-generated
+      if (typeof node.nodeId !== 'undefined' && node.nodeId !== null) {
+        id = idPrefix + '-checkbox-' + node.nodeId;
+      } else if (typeof node.id !== 'undefined' && node.id !== null) {
         id = idPrefix + '-checkbox-' + node.id;
       } else {
         id = idPrefix + '-checkbox-' + [...path, idx].join('-') + '-' + (checkboxIdCounter.val++);
@@ -418,9 +381,151 @@
     }
   }
 
+  // Helper: get loading text from settings or use default
+  function getLoadingText(settings) {
+    return settings.loadingText || 'Loading more...';
+  }
+
+  // Helper: handle focus mode behavior
+  function handleFocusMode(node, settings, idNodeMap, $container) {
+    if (!settings.focusMode || !settings.focusMode.enabled) return;
+
+    const focusMode = settings.focusMode;
+    
+    switch (focusMode.type) {
+      case 'accordion':
+        handleAccordionMode(node, settings, idNodeMap, $container);
+        break;
+      case 'highlight':
+        handleHighlightMode(node, settings, idNodeMap, $container);
+        break;
+      case 'collapse-siblings':
+        handleCollapseSiblingsMode(node, settings, idNodeMap, $container);
+        break;
+      case 'scroll':
+        handleScrollMode(node, settings, idNodeMap, $container);
+        break;
+    }
+  }
+
+  // Accordion mode: only one node open at a time per level
+  function handleAccordionMode(node, settings, idNodeMap, $container) {
+    const siblings = getSiblingNodes(node, idNodeMap);
+    siblings.forEach(sibling => {
+      if (sibling.open && sibling !== node) {
+        sibling.open = false;
+      }
+    });
+    
+    // Re-render to apply changes
+    reRenderTree($container, settings);
+  }
+
+  // Highlight mode: highlight current node, de-emphasize others
+  function handleHighlightMode(node, settings, idNodeMap, $container) {
+    // Remove focus from all nodes
+    $container.find('.radix-tree-focused').removeClass('radix-tree-focused');
+    
+    // Add focus to current node
+    const nodeElement = $container.find(`[data-radix-id="${node._radixId}"]`);
+    if (nodeElement.length) {
+      nodeElement.addClass('radix-tree-focused');
+      
+      // Auto-scroll if enabled
+      if (settings.focusMode.autoScroll) {
+        nodeElement[0].scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'nearest' 
+        });
+      }
+    }
+  }
+
+  // Collapse siblings mode: collapse sibling nodes when opening a new one
+  function handleCollapseSiblingsMode(node, settings, idNodeMap, $container) {
+    const siblings = getSiblingNodes(node, idNodeMap);
+    siblings.forEach(sibling => {
+      if (sibling.open && sibling !== node) {
+        sibling.open = false;
+      }
+    });
+    
+    // Re-render to apply changes
+    reRenderTree($container, settings);
+  }
+
+  // Scroll mode: just scroll to the opened node
+  function handleScrollMode(node, settings, idNodeMap, $container) {
+    const nodeElement = $container.find(`[data-radix-id="${node._radixId}"]`);
+    if (nodeElement.length && settings.focusMode.autoScroll) {
+      nodeElement[0].scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'nearest' 
+      });
+    }
+  }
+
+  // Helper: re-render tree with current settings
+  function reRenderTree($container, settings) {
+    const idPrefix = $container.data('radixTreeIdPrefix');
+    const checkboxIdCounter = { val: 0 };
+    const idNodeMap = buildIdNodeMap(settings.data, [], {}, null, idPrefix, checkboxIdCounter);
+    $container.empty();
+    const $treeWrapper = $('<div class="radix-tree"></div>');
+    $treeWrapper.append(renderTree(settings.data, settings.callbacks, null, [], settings, idNodeMap, $container, false, idPrefix, checkboxIdCounter));
+    $container.append($treeWrapper);
+  }
+
   // Render function with checkboxes, unique ids, keyboard navigation, lazy loading, badges/tags, and infinite scroll
   function renderTree(data, callbacks, parentNode = null, path = [], settings = {}, idNodeMap = {}, $container, parentDisabled = false, idPrefix = '', checkboxIdCounter = { val: 0 }) {
     const rowHeight = 32; // px, approximate height of a row (used for scroll container and last <li> padding)
+    
+    // Add loading spinner styles if not already added
+    if (!document.getElementById('radix-tree-loading-styles')) {
+      const style = document.createElement('style');
+      style.id = 'radix-tree-loading-styles';
+      style.textContent = `
+        .radix-tree-loading {
+          display: flex !important;
+          align-items: center;
+          justify-content: flex-start;
+          padding: 12px;
+          padding-top: 3px !important;
+          color: #666;
+          font-size: 14px;
+        }
+        .radix-tree-spinner {
+          display: inline-block;
+          width: 15px;
+          height: 15px;
+          margin-left: 5px !important;
+          border: 2px solid #e0e0e0;
+          border-radius: 50%;
+          border-top-color: #4caf50;
+          animation: radix-tree-spin 1s ease-in-out infinite;
+          margin-right: 8px;
+        }
+        @keyframes radix-tree-spin {
+          to { transform: rotate(360deg); }
+        }
+        .radix-tree-loading-text {
+          font-size: 13px;
+          color: #666;
+        }
+        .radix-tree-focused {
+          background: rgba(76, 175, 80, 0.1) !important;
+          transition: all 0.3s ease;
+        }
+        .radix-tree-focused details {
+          background: rgba(76, 175, 80, 0.05);
+        }
+        .radix-tree-focus-transition {
+          transition: all 0.3s ease;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+    
     const ul = document.createElement('ul');
     ul.className = 'tree';
     // Infinite scroll: only enable if pageSize >= paginateThreshold and children count >= pageSize
@@ -445,8 +550,11 @@
                 parentNode._loadingMore = true;
                 // Show loading indicator
                 const loadingLi = document.createElement('li');
-                loadingLi.textContent = 'Loading...';
                 loadingLi.className = 'radix-tree-loading';
+                loadingLi.innerHTML = `
+                  <div class="radix-tree-spinner"></div>
+                  <span class="radix-tree-loading-text">${getLoadingText(settings)}</span>
+                `;
                 ul.appendChild(loadingLi);
                 // Record scroll position before loading
                 const prevScrollTop = ul.scrollTop;
@@ -495,6 +603,8 @@
     }
     data.forEach((node, idx) => {
       const li = document.createElement('li');
+      // Add data attribute for focus mode
+      li.setAttribute('data-radix-id', node._radixId);
       // Dynamic className for parent/child nodes
       if (node.className) {
         if ((node.children && node.children.length) || node.lazy) {
@@ -516,9 +626,6 @@
       const checkbox = document.createElement('input');
       checkbox.type = 'checkbox';
       checkbox.id = checkboxId;
-      if (typeof node.id !== 'undefined' && node.id !== null) {
-        checkbox.setAttribute('data-value', node.id);
-      }
       checkbox.checked = !!node.checked;
       checkbox.indeterminate = !!node.indeterminate;
       checkbox.tabIndex = 0;
@@ -528,6 +635,12 @@
       checkbox.style.height = '1.2em';
       checkbox.style.margin = 0;
       checkbox.style.zIndex = 2;
+      // Set data-value with priority: nodeId > id
+      if (typeof node.nodeId !== 'undefined' && node.nodeId !== null) {
+        checkbox.setAttribute('data-value', node.nodeId);
+      } else if (typeof node.id !== 'undefined' && node.id !== null) {
+        checkbox.setAttribute('data-value', node.id);
+      }
       if (isDisabled) {
         checkbox.disabled = true;
       }
@@ -699,6 +812,15 @@
               // Was closed, now open = EXPAND
               const siblings = getSiblingNodes(node, idNodeMap);
               callbacks.onExpand && callbacks.onExpand(node, details, siblings);
+              
+              // Handle focus mode
+              let $container = $(summary).closest('.radix-tree-parent');
+              if ($container.length) {
+                const idPrefix = $container.data('radixTreeIdPrefix');
+                const checkboxIdCounter = { val: 0 };
+                const currentIdNodeMap = buildIdNodeMap(settings.data, [], {}, null, idPrefix, checkboxIdCounter);
+                handleFocusMode(node, settings, currentIdNodeMap, $container);
+              }
             } else if (wasOpen && !details.open) {
               // Was open, now closed = COLLAPSE
               const siblings = getSiblingNodes(node, idNodeMap);
@@ -748,7 +870,11 @@
         details.appendChild(summary);
         if (node._loading) {
           const loadingLi = document.createElement('li');
-          loadingLi.textContent = 'Loading...';
+          loadingLi.className = 'radix-tree-loading';
+          loadingLi.innerHTML = `
+            <div class="radix-tree-spinner"></div>
+            <span class="radix-tree-loading-text">${getLoadingText(settings)}</span>
+          `;
           details.appendChild(document.createElement('ul')).appendChild(loadingLi);
         } else if (node.children && node.children.length) {
           // Infinite scroll: pass node as parentNode if infinite
@@ -948,6 +1074,16 @@
       onCheck: null,
       lazyLoadDelay: 1000, // ms, default delay for lazy loading
       pageSize: 20,        // default page size for infinite scroll/lazy load
+      // Focus mode configuration
+      focusMode: {
+        enabled: false,
+        type: 'highlight', // 'accordion', 'highlight', 'scroll', 'collapse-siblings'
+        autoScroll: true,
+        highlightColor: '#4caf50',
+        animationDuration: 300,
+        preserveRoot: true, // Keep root nodes open
+        maxOpenLevels: 2    // Max number of open levels
+      },
       // paginateThreshold is now optional
       // Sample lazyLoad function for demo
       lazyLoad: function(node, done) {

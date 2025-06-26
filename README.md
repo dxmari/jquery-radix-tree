@@ -71,6 +71,8 @@ You can also experiment with different data and features by editing `index.js`.
 - **Expand/Collapse Test:** `example/expand-collapse-test.html` - Test enhanced expand/collapse events
 - **Employee Directory:** `example/lazyload-example2.html` - Multi-level org structure with lazy loading
 - **GitHub Integration:** `example/lazyload-github.html` - Real API integration example
+- **Focus Mode Demo:** `example/focus-mode-demo.html` - Interactive focus mode examples
+- **NodeId Demo:** `example/nodeid-demo.html` - Database integration with nodeId
 
 ---
 
@@ -258,6 +260,136 @@ $('.radix-tree').radixTree({
 });
 ```
 
+### Focus Mode
+
+Control how the tree behaves when expanding nodes with configurable focus modes:
+
+```js
+$('.radix-tree').radixTree({
+  data: myData,
+  focusMode: {
+    enabled: true,
+    type: 'highlight', // 'accordion', 'highlight', 'collapse-siblings', 'scroll'
+    autoScroll: true,
+    highlightColor: '#4caf50',
+    animationDuration: 300,
+    preserveRoot: true,
+    maxOpenLevels: 2
+  }
+});
+```
+
+#### Focus Mode Types
+
+**Accordion Mode (`'accordion'`):**
+- Only one node open at a time per level
+- Opening a new node automatically closes the previously open one
+- Perfect for limited screen space
+
+```js
+focusMode: {
+  enabled: true,
+  type: 'accordion'
+}
+```
+
+**Highlight Mode (`'highlight'`):**
+- Multiple nodes can stay open
+- Current node gets visual focus with colored border and background
+- Includes smooth auto-scroll to the focused node
+
+```js
+focusMode: {
+  enabled: true,
+  type: 'highlight',
+  highlightColor: '#4caf50', // Custom highlight color
+  autoScroll: true
+}
+```
+
+**Collapse Siblings Mode (`'collapse-siblings'`):**
+- When opening a node, all its siblings automatically collapse
+- Keeps the tree clean while maintaining context
+
+```js
+focusMode: {
+  enabled: true,
+  type: 'collapse-siblings'
+}
+```
+
+**Auto-Scroll Mode (`'scroll'`):**
+- Simply scrolls to the newly opened node
+- Doesn't change any open/close states
+- Great for large trees
+
+```js
+focusMode: {
+  enabled: true,
+  type: 'scroll',
+  autoScroll: true
+}
+```
+
+#### Focus Mode Configuration
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `enabled` | boolean | `false` | Enable/disable focus mode |
+| `type` | string | `'highlight'` | Focus behavior type |
+| `autoScroll` | boolean | `true` | Auto-scroll to focused node |
+| `highlightColor` | string | `'#4caf50'` | Color for highlight mode |
+| `animationDuration` | number | `300` | Animation duration in ms |
+| `preserveRoot` | boolean | `true` | Keep root nodes open |
+| `maxOpenLevels` | number | `2` | Maximum open levels |
+
+#### Complete Focus Mode Example
+
+```js
+const treeData = [
+  {
+    label: '📁 Documents',
+    open: true,
+    children: [
+      {
+        label: '📄 Work',
+        children: [
+          { label: '📊 Reports' },
+          { label: '📋 Projects' },
+          { label: '📧 Emails' }
+        ]
+      },
+      {
+        label: '🏠 Personal',
+        children: [
+          { label: '📸 Photos' },
+          { label: '📚 Books' },
+          { label: '🎵 Music' }
+        ]
+      }
+    ]
+  }
+];
+
+$('.radix-tree').radixTree({
+  data: treeData,
+  focusMode: {
+    enabled: true,
+    type: 'highlight',
+    autoScroll: true,
+    highlightColor: '#2196f3',
+    animationDuration: 400,
+    preserveRoot: true,
+    maxOpenLevels: 3
+  },
+  onExpand: function(node, details, siblings) {
+    console.log('Focused on:', node.label);
+  }
+});
+```
+
+**Demo:** See `example/focus-mode-demo.html` for interactive examples of all focus modes.
+
 ### Complete Node Properties
 
 Access all node properties including internal radix tree properties:
@@ -435,55 +567,55 @@ $('.radix-tree').radixTree('setData', newData);
 
 ## Data Structure
 
-Each node is an object with these properties:
+Each node in the tree can have the following properties:
 
-- `label` (string): The display text.
-- `children` (array): Child nodes.
-- `open` (bool): Whether the node is expanded.
-- `checked` (bool): Checkbox state.
-- `indeterminate` (bool): Checkbox indeterminate state.
-- `lazy` (bool): If true, children are loaded on demand.
-- `badge` (string|number): Optional badge.
-- `tags` (array): Optional tags.
-- `disabled` (bool): Disable the node.
-- `infinite` (bool): Enable infinite scroll for this node.
-- `className` (string): Custom class for this node's `<li>`. Applies to parent or child nodes.
-- `lazyLoadDelay` (number): Delay in ms for lazy loading (plugin option, not per node).
-- `pageSize` (number): Items per page for infinite scroll/lazy load (plugin option, not per node).
-- `paginateThreshold` (number, optional): Minimum pageSize to enable pagination/scroll. If not provided, defaults to Math.min(10, pageSize).
-
-**Internal Properties (added by the plugin):**
-- `_radixId` (string): Internal radix tree ID for API commands.
-- `_radixParentId` (string): Parent node's internal ID.
-- `_lazyLoaded` (bool): Whether lazy children have been loaded.
-- `_loading` (bool): Whether lazy loading is in progress.
-- `_page` (number): Current page for infinite scroll.
-- `hasMore` (bool): Whether more pages are available.
-
-**Example:**
 ```js
 {
-  label: 'Frontend',
-  open: true,
-  checked: false,
-  lazy: true,
-  badge: 'New',
-  tags: ['UI', 'urgent'],
-  disabled: false,
-  infinite: false,
-  children: [ ... ],
-  className: 'custom-class',
-  lazyLoadDelay: 1000,
-  pageSize: 20,
-  paginateThreshold: 5,
-  // Internal properties (added by plugin)
-  _radixId: 'radix-tree-checkbox-frontend',
-  _radixParentId: 'radix-tree-checkbox-projects',
-  _lazyLoaded: false,
-  _loading: false,
-  _page: 1,
-  hasMore: true
+  label: 'Node Label',           // Display text (required)
+  nodeId: 'db_id_123',          // Database-friendly identifier (optional)
+  id: 'legacy_id',              // Legacy identifier (optional, deprecated)
+  checked: false,               // Checkbox state
+  open: false,                  // Expansion state
+  disabled: false,              // Disable node and children
+  lazy: false,                  // Enable lazy loading
+  infinite: false,              // Enable infinite scroll
+  children: [],                 // Child nodes
+  badge: 'New',                 // Badge text/number
+  tags: ['urgent', 'feature'],  // Array of tags
+  className: 'custom-class'     // Custom CSS class
 }
+```
+
+### Node Identifiers
+
+The plugin supports multiple ways to identify nodes:
+
+1. **`nodeId` (Recommended)**: Database-friendly identifier
+   - Used for database integration and data collection
+   - Takes priority over `id` property
+   - Example: `nodeId: 'user_123'` or `nodeId: 456`
+
+2. **`id` (Legacy)**: Legacy identifier
+   - Maintained for backward compatibility
+   - Used if `nodeId` is not provided
+
+3. **Auto-generated**: Internal radix tree ID
+   - Generated automatically if no `nodeId` or `id` is provided
+   - Format: `radix-tree-{instance}-{random}-checkbox-{path}-{counter}`
+
+**Example with nodeId:**
+```js
+const data = [
+  {
+    label: 'Users',
+    nodeId: 'users_folder',
+    open: true,
+    children: [
+      { label: 'John Doe', nodeId: 'user_123', checked: true },
+      { label: 'Jane Smith', nodeId: 'user_456', checked: false }
+    ]
+  }
+];
 ```
 
 ---

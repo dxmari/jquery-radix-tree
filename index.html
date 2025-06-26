@@ -66,6 +66,7 @@
             <a href="#guide-disabled">Disabled Nodes</a>
             <a href="#guide-siblings">Sibling Detection</a>
             <a href="#guide-events">Enhanced Events</a>
+            <a href="#guide-focus">Focus Mode</a>
             <a href="#guide-api">Command API</a>
           </div>
         </div>
@@ -116,6 +117,8 @@
               class="desc">Get sibling nodes with complete properties.</span></div>
           <div class="feature-card"><span class="icon">📡</span><span class="title">Enhanced Events</span><span
               class="desc">All events include sibling data and complete node info.</span></div>
+          <div class="feature-card"><span class="icon">🎯</span><span class="title">Focus Mode</span><span
+              class="desc">Configurable focus modes: accordion, highlight, collapse-siblings, scroll.</span></div>
           <div class="feature-card"><span class="icon">⌨️</span><span class="title">Keyboard Navigation</span><span
               class="desc">Full arrow-key and space/enter navigation.</span></div>
           <div class="feature-card"><span class="icon">🧩</span><span class="title">Custom Callbacks</span><span
@@ -235,7 +238,7 @@ $('.radix-tree').radixTree({ data: [ /* ... */ ] });</code></pre></div>
     lazyLoad: myLazyLoad,
     lazyLoadDelay: 1200 // Set delay dynamically (ms)
   });
-            </code>
+              </code>
           </pre>
           </div>
           <br>
@@ -581,6 +584,61 @@ $('.radix-tree').radixTree({ data: [ /* ... */ ] });</code></pre></div>
           <div class="output-card-header">Output</div>
           <div class="output-card">
             <div class="demo-tree" id="demo-api"></div>
+          </div>
+        </div>
+        <div class="focus-mode">
+          <div class="section-subtitle" id="guide-focus">Focus Mode</div>
+          <hr class="section-divider" />
+          <div class="section-intro">Control how the tree behaves when expanding nodes with configurable focus modes. Choose from accordion, highlight, collapse-siblings, or auto-scroll modes to create the perfect user experience for your application.</div>
+          <div class="section-intro">For example, you can use import this snippet inside your files like this:</div>
+          <div class="code-card">
+            <div class="code-card-header"><span class="code-card-icon"><svg xmlns="http://www.w3.org/2000/svg"
+                  height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
+                  <path
+                    d="m384-336 56-57-87-87 87-87-56-57-144 144 144 144Zm192 0 144-144-144-144-56 57 87 87-87 87 56 57ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z" />
+                </svg></span> Focus Mode Demo</div>
+            <button class="copy-btn" onclick="copyCode('code-focus', event)" title="Copy"><svg viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" height="1em" class="nextra-copy-icon">
+                <rect x="9" y="9" width="13" height="13" rx="2"></rect>
+                <path d="M5 15H4C2 14.1046 2 13V4C2 2.89543 2.89543 2 4 2H13C14.1046 2 15 2.89543 15 4V5">
+                </path>
+              </svg></button>
+            <pre class="code-block language-js" id="code-focus">
+              <code>
+  $('.radix-tree').radixTree({
+    data: [
+      {
+        label: '📁 Documents',
+        open: true,
+        children: [
+          {
+            label: '📄 Work',
+            children: [
+              { label: '📊 Reports' },
+              { label: '📋 Projects' },
+              { label: '📧 Emails' }
+            ]
+          },
+          {
+            label: '🏠 Personal',
+            children: [
+              { label: '📸 Photos' },
+              { label: '📚 Books' },
+              { label: '🎵 Music' }
+            ]
+          }
+        ]
+      }
+    ]
+  });
+              </code>
+            </pre>
+          </div>
+          <br>
+          <br>
+          <div class="output-card-header">Output</div>
+          <div class="output-card">
+            <div class="demo-tree" id="demo-focus"></div>
           </div>
         </div>
       </section>

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Focus Mode Demo - Radix Tree</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="../tree.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 20px;
+            background: #f8f9fa;
+        }
+        .demo-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .demo-section {
+            background: white;
+            margin: 20px 0;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .demo-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .demo-description {
+            color: #6c757d;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        .tree-container {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            background: #fafbfc;
+            min-height: 300px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .controls {
+            margin: 15px 0;
+            padding: 15px;
+            background: #e3f2fd;
+            border-radius: 6px;
+            border-left: 4px solid #2196f3;
+        }
+        .controls h4 {
+            margin: 0 0 10px 0;
+            color: #1976d2;
+        }
+        .controls ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .controls li {
+            margin: 5px 0;
+            color: #424242;
+        }
+        .mode-selector {
+            margin: 15px 0;
+            padding: 15px;
+            background: #fff3cd;
+            border-radius: 6px;
+            border-left: 4px solid #ffc107;
+        }
+        .mode-selector label {
+            display: inline-block;
+            margin-right: 15px;
+            font-weight: 500;
+        }
+        .mode-selector input[type="radio"] {
+            margin-right: 5px;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .feature-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        .feature-card h3 {
+            margin: 0 0 10px 0;
+            color: #495057;
+        }
+        .feature-card p {
+            margin: 0;
+            color: #6c757d;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <h1 style="text-align: center; color: #2c3e50; margin-bottom: 30px;">
+            🎯 Focus Mode Demo - Radix Tree
+        </h1>
+
+        <div class="demo-section">
+            <div class="demo-title">
+                <span>⚙️</span>
+                Focus Mode Configuration
+            </div>
+            <div class="demo-description">
+                Choose different focus modes to see how the tree behaves when expanding nodes. Each mode provides a different user experience for managing open nodes.
+            </div>
+            
+            <div class="mode-selector">
+                <h4>Select Focus Mode:</h4>
+                <label>
+                    <input type="radio" name="focusMode" value="none" checked> None (Default)
+                </label>
+                <label>
+                    <input type="radio" name="focusMode" value="accordion"> Accordion
+                </label>
+                <label>
+                    <input type="radio" name="focusMode" value="highlight"> Highlight
+                </label>
+                <label>
+                    <input type="radio" name="focusMode" value="collapse-siblings"> Collapse Siblings
+                </label>
+                <label>
+                    <input type="radio" name="focusMode" value="scroll"> Auto-Scroll
+                </label>
+            </div>
+
+            <div class="tree-container" id="focus-demo"></div>
+        </div>
+
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>🎪 Accordion Mode</h3>
+                <p>Only one node open at a time per level. Opening a new node automatically closes the previously open one. Perfect for limited screen space.</p>
+            </div>
+            <div class="feature-card">
+                <h3>✨ Highlight Mode</h3>
+                <p>Multiple nodes can stay open, but the current node gets visual focus with a green border and background. Includes smooth auto-scroll.</p>
+            </div>
+            <div class="feature-card">
+                <h3>📁 Collapse Siblings</h3>
+                <p>When opening a node, all its siblings automatically collapse. Keeps the tree clean while maintaining context.</p>
+            </div>
+            <div class="feature-card">
+                <h3>🔄 Auto-Scroll</h3>
+                <p>Simply scrolls to the newly opened node without changing any open/close states. Great for large trees.</p>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <div class="demo-title">
+                <span>📋</span>
+                Instructions
+            </div>
+            <div class="controls">
+                <h4>How to test:</h4>
+                <ul>
+                    <li><strong>Select a focus mode</strong> from the radio buttons above</li>
+                    <li><strong>Click on nodes</strong> with chevrons (▶️) to expand them</li>
+                    <li><strong>Observe the behavior</strong> - each mode behaves differently</li>
+                    <li><strong>Try different combinations</strong> to see the effects</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample data for focus mode demo
+        const focusData = [
+            {
+                label: '📁 Documents',
+                open: true,
+                children: [
+                    {
+                        label: '📄 Work',
+                        children: [
+                            { label: '📊 Reports', children: [
+                                { label: 'Q1 Report.pdf' },
+                                { label: 'Q2 Report.pdf' },
+                                { label: 'Q3 Report.pdf' }
+                            ]},
+                            { label: '📋 Projects', children: [
+                                { label: 'Project A' },
+                                { label: 'Project B' },
+                                { label: 'Project C' }
+                            ]},
+                            { label: '📧 Emails', children: [
+                                { label: 'Inbox' },
+                                { label: 'Sent' },
+                                { label: 'Drafts' }
+                            ]}
+                        ]
+                    },
+                    {
+                        label: '🏠 Personal',
+                        children: [
+                            { label: '📸 Photos', children: [
+                                { label: 'Vacation 2023' },
+                                { label: 'Family' },
+                                { label: 'Events' }
+                            ]},
+                            { label: '📚 Books', children: [
+                                { label: 'Fiction' },
+                                { label: 'Non-Fiction' },
+                                { label: 'Technical' }
+                            ]},
+                            { label: '🎵 Music', children: [
+                                { label: 'Rock' },
+                                { label: 'Jazz' },
+                                { label: 'Classical' }
+                            ]}
+                        ]
+                    },
+                    {
+                        label: '⚙️ Settings',
+                        children: [
+                            { label: '🔧 System', children: [
+                                { label: 'Display' },
+                                { label: 'Sound' },
+                                { label: 'Network' }
+                            ]},
+                            { label: '👤 User', children: [
+                                { label: 'Profile' },
+                                { label: 'Security' },
+                                { label: 'Preferences' }
+                            ]},
+                            { label: '🔒 Privacy', children: [
+                                { label: 'Permissions' },
+                                { label: 'Data' },
+                                { label: 'Cookies' }
+                            ]}
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        // Initialize tree
+        let currentTree = null;
+
+        function initializeTree(focusModeType) {
+            const focusModeConfig = {
+                enabled: focusModeType !== 'none',
+                type: focusModeType === 'none' ? 'highlight' : focusModeType,
+                autoScroll: true,
+                highlightColor: '#4caf50',
+                animationDuration: 300,
+                preserveRoot: true,
+                maxOpenLevels: 2
+            };
+
+            $('#focus-demo').empty();
+            currentTree = $('#focus-demo').radixTree({
+                data: focusData,
+                focusMode: focusModeConfig,
+                onExpand: function(node, details, siblings) {
+                    console.log('Expanded:', node.label, 'Focus Mode:', focusModeType);
+                },
+                onCollapse: function(node, details, siblings) {
+                    console.log('Collapsed:', node.label);
+                }
+            });
+        }
+
+        // Initialize with default mode
+        initializeTree('none');
+
+        // Handle mode changes
+        $('input[name="focusMode"]').on('change', function() {
+            const selectedMode = $(this).val();
+            initializeTree(selectedMode);
+        });
+
+        // Add some visual feedback
+        $('.mode-selector input[type="radio"]').on('change', function() {
+            $('.mode-selector').css('background', '#d4edda').css('border-left-color', '#28a745');
+            setTimeout(() => {
+                $('.mode-selector').css('background', '#fff3cd').css('border-left-color', '#ffc107');
+            }, 500);
+        });
+    </script>
+</body>
+</html> 

@@ -424,6 +424,91 @@ $(function () {
     }
   });
 
+  // Focus Mode Example
+  $('#demo-focus').empty().append('<div class="demo-radix-tree"></div>');
+  $('.demo-radix-tree', '#demo-focus').radixTree({
+    data: [
+      {
+        label: '📁 Documents',
+        open: true,
+        children: [
+          {
+            label: '📄 Work',
+            children: [
+              { label: '📊 Reports', children: [
+                { label: 'Q1 Report.pdf' },
+                { label: 'Q2 Report.pdf' },
+                { label: 'Q3 Report.pdf' }
+              ]},
+              { label: '📋 Projects', children: [
+                { label: 'Project A' },
+                { label: 'Project B' },
+                { label: 'Project C' }
+              ]},
+              { label: '📧 Emails', children: [
+                { label: 'Inbox' },
+                { label: 'Sent' },
+                { label: 'Drafts' }
+              ]}
+            ]
+          },
+          {
+            label: '🏠 Personal',
+            children: [
+              { label: '📸 Photos', children: [
+                { label: 'Vacation 2023' },
+                { label: 'Family' },
+                { label: 'Events' }
+              ]},
+              { label: '📚 Books', children: [
+                { label: 'Fiction' },
+                { label: 'Non-Fiction' },
+                { label: 'Technical' }
+              ]},
+              { label: '🎵 Music', children: [
+                { label: 'Rock' },
+                { label: 'Jazz' },
+                { label: 'Classical' }
+              ]}
+            ]
+          },
+          {
+            label: '⚙️ Settings',
+            children: [
+              { label: '🔧 System', children: [
+                { label: 'Display' },
+                { label: 'Sound' },
+                { label: 'Network' }
+              ]},
+              { label: '👤 User', children: [
+                { label: 'Profile' },
+                { label: 'Security' },
+                { label: 'Preferences' }
+              ]},
+              { label: '🔒 Privacy', children: [
+                { label: 'Permissions' },
+                { label: 'Data' },
+                { label: 'Cookies' }
+              ]}
+            ]
+          }
+        ]
+      }
+    ],
+    focusMode: {
+      enabled: true,
+      type: 'highlight',
+      autoScroll: true,
+      highlightColor: '#4caf50',
+      animationDuration: 300,
+      preserveRoot: true,
+      maxOpenLevels: 2
+    },
+    onExpand: function(node, details, siblings) {
+      console.log('Focused on:', node.label);
+    }
+  });
+
   // Command API Example
   // For demo, show a tree and expose API via window for console testing
   window.renderRadixDemo('#demo-api', window.radixDemoData.basic);

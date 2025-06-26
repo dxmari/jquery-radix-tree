@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NodeId Demo - Radix Tree</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="../tree.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 20px;
+            background: #f8f9fa;
+        }
+        .demo-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .demo-section {
+            background: white;
+            margin: 20px 0;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .demo-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .demo-description {
+            color: #6c757d;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        .tree-container {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            background: #fafbfc;
+            min-height: 300px;
+        }
+        .info-panel {
+            margin: 15px 0;
+            padding: 15px;
+            background: #e3f2fd;
+            border-radius: 6px;
+            border-left: 4px solid #2196f3;
+        }
+        .info-panel h4 {
+            margin: 0 0 10px 0;
+            color: #1976d2;
+        }
+        .info-panel ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .info-panel li {
+            margin: 5px 0;
+            color: #424242;
+        }
+        .code-example {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .feature-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        .feature-card h3 {
+            margin: 0 0 10px 0;
+            color: #495057;
+        }
+        .feature-card p {
+            margin: 0;
+            color: #6c757d;
+            line-height: 1.5;
+        }
+        .console-output {
+            background: #2d3748;
+            color: #e2e8f0;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <h1 style="text-align: center; color: #2c3e50; margin-bottom: 30px;">
+            🆔 NodeId Demo - Radix Tree
+        </h1>
+
+        <div class="demo-section">
+            <div class="demo-title">
+                <span>💾</span>
+                Database Integration with NodeId
+            </div>
+            <div class="demo-description">
+                The <code>nodeId</code> property allows you to assign database-friendly identifiers to nodes while keeping the display label separate. This makes it easy to collect node data and integrate with databases.
+            </div>
+            
+            <div class="tree-container" id="nodeid-demo"></div>
+        </div>
+
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>🎯 Database-Friendly IDs</h3>
+                <p>Use <code>nodeId</code> to assign meaningful identifiers that work well with your database schema. Perfect for user IDs, category IDs, or any primary key.</p>
+            </div>
+            <div class="feature-card">
+                <h3>📊 Easy Data Collection</h3>
+                <p>Collect checked nodes with their database IDs for easy processing. No need to parse labels or maintain separate ID mappings.</p>
+            </div>
+            <div class="feature-card">
+                <h3>🔄 Backward Compatible</h3>
+                <p>The <code>id</code> property still works for legacy code. <code>nodeId</code> takes priority when both are present.</p>
+            </div>
+            <div class="feature-card">
+                <h3>⚡ Performance</h3>
+                <p>Direct ID access without string parsing or lookups. Faster data collection and processing.</p>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <div class="demo-title">
+                <span>📝</span>
+                Code Example
+            </div>
+            <div class="code-example">
+const data = [
+  {
+    label: 'Users',
+    nodeId: 'users_folder',
+    open: true,
+    children: [
+      { label: 'John Doe', nodeId: 'user_123', checked: true },
+      { label: 'Jane Smith', nodeId: 'user_456', checked: false },
+      { label: 'Bob Wilson', nodeId: 'user_789', checked: true }
+    ]
+  },
+  {
+    label: 'Categories',
+    nodeId: 'categories_folder',
+    open: true,
+    children: [
+      { label: 'Technology', nodeId: 'cat_tech', checked: false },
+      { label: 'Design', nodeId: 'cat_design', checked: true }
+    ]
+  }
+];
+
+$('#tree').radixTree({
+  data: data,
+  onCheck: function(node, checkbox, siblings) {
+    console.log('Node checked:', {
+      label: node.label,
+      nodeId: node.nodeId,
+      checked: checkbox.checked
+    });
+  }
+});
+
+// Get checked nodes with their IDs
+const checked = $('#tree').radixTree('getChecked');
+console.log('Checked nodes:', checked.map(n => ({
+  label: n.label,
+  nodeId: n.nodeId,
+  id: n.id
+})));
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <div class="demo-title">
+                <span>🖥️</span>
+                Console Output
+            </div>
+            <div class="console-output" id="console-output">
+                <div>// Click on nodes to see console output</div>
+                <div>// Check/uncheck nodes to see nodeId values</div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <div class="demo-title">
+                <span>ℹ️</span>
+                How It Works
+            </div>
+            <div class="info-panel">
+                <h4>NodeId Priority:</h4>
+                <ul>
+                    <li><strong>1st Priority:</strong> <code>nodeId</code> - Database-friendly identifier</li>
+                    <li><strong>2nd Priority:</strong> <code>id</code> - Legacy identifier (backward compatibility)</li>
+                    <li><strong>3rd Priority:</strong> Auto-generated internal ID</li>
+                </ul>
+            </div>
+            <div class="info-panel">
+                <h4>Use Cases:</h4>
+                <ul>
+                    <li><strong>Database Integration:</strong> Use actual database IDs as nodeId</li>
+                    <li><strong>API Calls:</strong> Send nodeId values to your backend</li>
+                    <li><strong>Data Collection:</strong> Collect checked nodes with their IDs</li>
+                    <li><strong>State Management:</strong> Track node states by ID</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample data with nodeId for database integration
+        const nodeIdData = [
+            {
+                label: 'Users',
+                nodeId: 'users_folder',
+                open: true,
+                children: [
+                    { label: 'John Doe', nodeId: 'user_123', checked: true },
+                    { label: 'Jane Smith', nodeId: 'user_456', checked: false },
+                    { label: 'Bob Wilson', nodeId: 'user_789', checked: true },
+                    { label: 'Alice Brown', nodeId: 'user_101', checked: false }
+                ]
+            },
+            {
+                label: 'Categories',
+                nodeId: 'categories_folder',
+                open: true,
+                children: [
+                    { label: 'Technology', nodeId: 'cat_tech', checked: false },
+                    { label: 'Design', nodeId: 'cat_design', checked: true },
+                    { label: 'Marketing', nodeId: 'cat_marketing', checked: false }
+                ]
+            },
+            {
+                label: 'Projects',
+                nodeId: 'projects_folder',
+                open: true,
+                children: [
+                    { label: 'Website Redesign', nodeId: 'proj_001', checked: true },
+                    { label: 'Mobile App', nodeId: 'proj_002', checked: false },
+                    { label: 'API Development', nodeId: 'proj_003', checked: true }
+                ]
+            }
+        ];
+
+        // Initialize tree with nodeId data
+        $('#nodeid-demo').radixTree({
+            data: nodeIdData,
+            onCheck: function(node, checkbox, siblings) {
+                const output = `✅ Node checked: "${node.label}" (nodeId: ${node.nodeId}) - ${checkbox.checked ? 'CHECKED' : 'UNCHECKED'}`;
+                addToConsole(output);
+                
+                // Show how to collect data for database
+                const checkedNodes = $('#nodeid-demo').radixTree('getChecked');
+                const nodeIds = checkedNodes.map(n => n.nodeId).filter(id => id);
+                addToConsole(`📊 Current checked nodeIds: [${nodeIds.join(', ')}]`);
+            },
+            onExpand: function(node, details, siblings) {
+                const output = `📂 Expanded: "${node.label}" (nodeId: ${node.nodeId})`;
+                addToConsole(output);
+            },
+            onCollapse: function(node, details, siblings) {
+                const output = `📁 Collapsed: "${node.label}" (nodeId: ${node.nodeId})`;
+                addToConsole(output);
+            }
+        });
+
+        function addToConsole(message) {
+            const console = document.getElementById('console-output');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.innerHTML = `<span style="color: #888;">[${timestamp}]</span> ${message}`;
+            console.appendChild(logEntry);
+            console.scrollTop = console.scrollHeight;
+        }
+
+        // Add initial console message
+        addToConsole('🚀 Tree initialized with nodeId support');
+        addToConsole('💡 Try clicking on nodes to see their nodeId values');
+    </script>
+</body>
+</html> 
