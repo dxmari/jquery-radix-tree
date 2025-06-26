@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multi-Level Lazy Loading with Real-time APIs</title>
+  <script src="https://code.jquery.com/jquery-3.7.1.slim.min.js"
+    integrity="sha256-kmHvs0B+OpCW5GVHUNjv9rOmY0IvSIRcf7zGUDTDQM8=" crossorigin="anonymous"></script>
+  <script src="../tree.min.js"></script>
+  <style>
+    html {
+      height: 100%;
+      font-family: Proza, sans-serif;
+      font-size: clamp(18px, 100vw / var(--width), 20px);
+      font-feature-settings: 'onum', 'pnum';
+      font-weight: 300;
+      margin: auto;
+      max-width: 800px;
+      margin-top: 120px;
+      font-size: 20px;
+    }
+
+    .controls {
+      margin: 20px 0;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      background: #2563eb;
+      color: white;
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      background: #1d4ed8;
+    }
+
+    .input-group {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .input-group input {
+      padding: 8px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    .status {
+      margin-top: 10px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .status-loading {
+      background: #fef3c7;
+      color: #d97706;
+      border: 1px solid #fed7aa;
+    }
+
+    .status-success {
+      background: #dcfce7;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+    }
+
+    .status-error {
+      background: #fef2f2;
+      color: #dc2626;
+      border: 1px solid #fecaca;
+    }
+  </style>
+</head>
+
+<body>
+  <hr style="margin: 48px 0;">
+  <div class="controls">
+    <div class="input-group">
+      <label>Employee Directory:</label>
+      <button class="btn" onclick="loadEmployeeDirectory()">Load Directory</button>
+    </div>
+  </div>
+  <div id="emp-status" class="status status-loading">Ready to load employee directory...</div>
+  <div class="radix-tree-employee"></div>
+  <script>
+    const headers = { 'Content-Type': 'application/json', 'x-api-key': 'reqres-free-v1' };
+    async function employeeLazyLoad(node, done, opts) {
+      // Define org structure
+      const orgLevels = [
+        { role: 'CEO', count: 1 },
+        { role: 'Director', count: 2 },
+        { role: 'Manager', count: 3 },
+        { role: 'Team Lead', count: 4 },
+        { role: 'Employee', count: 5 }
+      ];
+
+      // Helper to get users from reqres.in (pagination: 1-2)
+      async function getAllUsers() {
+        const users = [];
+        for (let page = 1; page <= 2; page++) {
+          const response = await (await fetch('https://reqres.in/api/users?page=' + page, { headers })).json();
+          users.push(...response.data);
+        }
+        return users;
+      }
+
+      // Root node: show CEO
+      if (!node || node.id === 'root') {
+        const users = await getAllUsers();
+        const ceo = users[0];
+        const children = [
+          {
+            label: `CEO: ${ceo.first_name} ${ceo.last_name}`,
+            id: `ceo-${ceo.id}`,
+            lazy: true,
+            avatar: ceo.avatar,
+            level: 0,
+            userIndex: 0,
+            checked: node && node.checked
+          }
+        ];
+        // Propagate checked state if parent is checked
+        if (node && node.checked) {
+          children.forEach(child => child.checked = true);
+        }
+        done(children, false);
+      } else {
+        // Determine current level from node.level (default 0)
+        const level = node.level !== undefined ? node.level + 1 : 1;
+        if (level >= orgLevels.length) {
+          // Leaf: show user details
+          const users = await getAllUsers();
+          const user = users[node.userIndex % users.length];
+          done([
+            { label: 'Email: ' + user.email, id: user.id + '-email' },
+            { label: 'Avatar', id: user.id + '-avatar', avatar: user.avatar }
+          ], false);
+          return;
+        }
+        // Otherwise, show next level of reports
+        const users = await getAllUsers();
+        const { role, count } = orgLevels[level];
+        // Spread users for demo, assign unique user per child
+        const children = Array.from({ length: count }).map((_, i) => {
+          const userIndex = (node.userIndex * 10 + i) % users.length;
+          const user = users[userIndex];
+          return {
+            label: `${role}: ${user.first_name} ${user.last_name}`,
+            id: `${role.toLowerCase().replace(/ /g, '-')}-${user.id}-l${level}-p${node.id}`,
+            lazy: true,
+            avatar: user.avatar,
+            level: level,
+            userIndex: userIndex,
+            checked: node.checked
+          };
+        });
+        // Propagate checked state if parent is checked
+        if (node.checked) {
+          children.forEach(child => child.checked = true);
+        }
+        done(children, false);
+      }
+    }
+
+    function loadEmployeeDirectory() {
+      $('#emp-status').attr('class', 'status status-loading').text('Loading employee directory...');
+      $(".radix-tree-employee").radixTree({
+        data: [
+          { label: 'Company', open: true, lazy: true, id: 'root' }
+        ],
+        lazyLoad: employeeLazyLoad,
+        onExpand: (node) => {
+          $('#emp-status').attr('class', 'status status-success').text(`Loaded: ${node.label}`);
+        },
+        onCheck: (node, checkbox, siblings) => {
+          console.log('Node changed:', node.label, 'Checked:', checkbox.checked);
+          console.log('Complete changed node:', {
+            id: node.id,
+            _radixId: node._radixId,
+            label: node.label,
+            checked: node.checked,
+            open: node.open,
+            level: node.level,
+            userIndex: node.userIndex,
+            avatar: node.avatar,
+            lazy: node.lazy,
+            _radixParentId: node._radixParentId,
+            // Include any other properties
+            ...node
+          });
+          
+          console.log('Siblings (complete objects):', siblings.map(sibling => ({
+            id: sibling.id,
+            _radixId: sibling._radixId,
+            label: sibling.label,
+            checked: sibling.checked,
+            open: sibling.open,
+            level: sibling.level,
+            userIndex: sibling.userIndex,
+            avatar: sibling.avatar,
+            lazy: sibling.lazy,
+            _radixParentId: sibling._radixParentId,
+            // Include any other properties
+            ...sibling
+          })));
+          
+          // Example: You can also get siblings programmatically
+          const treeInstance = $(".radix-tree-employee");
+          const siblingsViaAPI = treeInstance.radixTree('getSiblings', node._radixId);
+          console.log('Siblings via API (complete):', siblingsViaAPI);
+          
+          // Update status to show sibling count
+          $('#emp-status').attr('class', 'status status-success')
+            .text(`Checked: ${node.label} (${siblings.length} siblings)`);
+        }
+      });
+      $('#emp-status').attr('class', 'status status-success').text('Employee directory loaded.');
+    }
+
+    // Initialize on page load
+    $(document).ready(function () {
+      loadEmployeeDirectory();
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radix Tree - Real-time API Lazy Loading Examples</title>
+    
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    
+    <!-- Radix Tree Plugin -->
+    <script src="../tree.js"></script>
+    <link rel="stylesheet" href="../style.css">
+    
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f8f9fa;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            color: #2563eb;
+            margin: 0 0 10px 0;
+        }
+        
+        .header p {
+            color: #666;
+            margin: 0;
+        }
+        
+        .example-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .example-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .example-description {
+            color: #6b7280;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .code-block {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            overflow-x: auto;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .tree-container {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            background: #fafafa;
+            min-height: 200px;
+        }
+        
+        .api-status {
+            margin-top: 10px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .status-success {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+        
+        .status-error {
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+        }
+        
+        .status-loading {
+            background: #fef3c7;
+            color: #d97706;
+            border: 1px solid #fed7aa;
+        }
+        
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+        
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .input-group input {
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 30px;
+        }
+        
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌐 Real-time API Lazy Loading Examples</h1>
+            <p>Comprehensive examples of integrating Radix Tree with real APIs for dynamic data loading</p>
+        </div>
+
+        <div class="grid">
+            <!-- GitHub API Example -->
+            <div class="example-section">
+                <div class="example-title">
+                    <span>🐙</span>
+                    GitHub API Integration
+                </div>
+                <div class="example-description">
+                    Browse GitHub repositories, followers, and repository contents in real-time using the GitHub API. 
+                    Demonstrates pagination, error handling, and dynamic data mapping.
+                </div>
+                
+                <div class="controls">
+                    <div class="input-group">
+                        <label>Username:</label>
+                        <input type="text" id="github-username" value="octocat" placeholder="Enter GitHub username">
+                        <button class="btn btn-primary" onclick="loadGitHubUser()">Load User</button>
+                    </div>
+                </div>
+                
+                <div class="tree-container" id="github-tree"></div>
+                <div id="github-status" class="api-status status-loading">Loading GitHub data...</div>
+                
+                <div class="code-block">
+// GitHub API Lazy Loader
+function githubLazyLoad(node, done, opts, delay) {
+  const page = opts && opts.page ? opts.page : 1;
+  const perPage = opts && opts.pageSize ? opts.pageSize : 10;
+  
+  let endpoint = '';
+  if (node.label === 'Repositories') {
+    endpoint = `https://api.github.com/users/${node.username}/repos?page=${page}&per_page=${perPage}`;
+  } else if (node.label === 'Followers') {
+    endpoint = `https://api.github.com/users/${node.username}/followers?page=${page}&per_page=${perPage}`;
+  } else if (node.label === 'Following') {
+    endpoint = `https://api.github.com/users/${node.username}/following?page=${page}&per_page=${perPage}`;
+  } else if (node.repoName) {
+    endpoint = `https://api.github.com/repos/${node.username}/${node.repoName}/contents?page=${page}&per_page=${perPage}`;
+  }
+  
+  if (endpoint) {
+    fetch(endpoint)
+      .then(response => {
+        if (!response.ok) throw new Error('API limit exceeded or user not found');
+        return response.json();
+      })
+      .then(data => {
+        const children = data.map(item => {
+          if (item.type === 'dir') {
+            return {
+              label: item.name,
+              lazy: true,
+              repoName: node.repoName || item.name,
+              username: node.username,
+              badge: '📁',
+              tags: ['directory']
+            };
+          } else if (item.type === 'file') {
+            return {
+              label: item.name,
+              badge: '📄',
+              tags: [item.name.split('.').pop() || 'file'],
+              id: item.sha
+            };
+          } else {
+            return {
+              label: item.login || item.name || item.full_name,
+              badge: item.public_repos || item.followers || '👤',
+              tags: item.type === 'User' ? ['user'] : ['repo'],
+              id: item.id
+            };
+          }
+        });
+        done(children, data.length === perPage);
+      })
+      .catch(error => {
+        console.warn('GitHub API Error:', error.message);
+        done([{ label: 'Mock Repository 1', badge: '⭐', tags: ['repo'], id: 1 }], false);
+      });
+  }
+}
+                </div>
+            </div>
+
+            <!-- JSONPlaceholder API Example -->
+            <div class="example-section">
+                <div class="example-title">
+                    <span>📊</span>
+                    JSONPlaceholder API Integration
+                </div>
+                <div class="example-description">
+                    Load users, posts, comments, and albums from the JSONPlaceholder API with client-side pagination. 
+                    Shows how to handle large datasets efficiently.
+                </div>
+                
+                <div class="controls">
+                    <button class="btn btn-primary" onclick="loadJSONPlaceholder()">Load Data</button>
+                    <button class="btn btn-secondary" onclick="clearJSONPlaceholder()">Clear</button>
+                </div>
+                
+                <div class="tree-container" id="json-tree"></div>
+                <div id="json-status" class="api-status status-loading">Ready to load JSONPlaceholder data...</div>
+                
+                <div class="code-block">
+// JSONPlaceholder API Lazy Loader
+function jsonPlaceholderLazyLoad(node, done, opts, delay) {
+  const page = opts && opts.page ? opts.page : 1;
+  const pageSize = opts && opts.pageSize ? opts.pageSize : 10;
+  const start = (page - 1) * pageSize;
+  
+  let endpoint = '';
+  if (node.label === 'Users') {
+    endpoint = 'https://jsonplaceholder.typicode.com/users';
+  } else if (node.label === 'Posts') {
+    endpoint = 'https://jsonplaceholder.typicode.com/posts';
+  } else if (node.label === 'Comments') {
+    endpoint = 'https://jsonplaceholder.typicode.com/comments';
+  } else if (node.label === 'Albums') {
+    endpoint = 'https://jsonplaceholder.typicode.com/albums';
+  } else if (node.userId) {
+    endpoint = `https://jsonplaceholder.typicode.com/posts?userId=${node.userId}`;
+  }
+  
+  if (endpoint) {
+    fetch(endpoint)
+      .then(response => response.json())
+      .then(data => {
+        const paginatedData = data.slice(start, start + pageSize);
+        const children = paginatedData.map(item => {
+          if (item.title) {
+            return {
+              label: item.title.substring(0, 30) + (item.title.length > 30 ? '...' : ''),
+              badge: item.id,
+              tags: ['post'],
+              id: item.id,
+              userId: item.userId
+            };
+          } else if (item.name) {
+            return {
+              label: item.name,
+              badge: item.id,
+              tags: ['user'],
+              id: item.id,
+              email: item.email
+            };
+          } else {
+            return {
+              label: item.name || item.title || `Item ${item.id}`,
+              badge: item.id,
+              tags: ['item'],
+              id: item.id
+            };
+          }
+        });
+        done(children, start + pageSize < data.length);
+      })
+      .catch(error => {
+        console.warn('JSONPlaceholder API Error:', error.message);
+        done([{ label: 'Mock Post 1', badge: 1, tags: ['post'], id: 1 }], false);
+      });
+  }
+}
+                </div>
+            </div>
+
+            <!-- File System API Example -->
+            <div class="example-section">
+                <div class="example-title">
+                    <span>📁</span>
+                    File System API Integration
+                </div>
+                <div class="example-description">
+                    Browse a mock file system structure with directories, files, and file sizes. 
+                    Demonstrates how to handle hierarchical file data with lazy loading.
+                </div>
+                
+                <div class="controls">
+                    <button class="btn btn-primary" onclick="loadFileSystem()">Load File System</button>
+                    <button class="btn btn-secondary" onclick="clearFileSystem()">Clear</button>
+                </div>
+                
+                <div class="tree-container" id="filesystem-tree"></div>
+                <div id="filesystem-status" class="api-status status-loading">Ready to load file system...</div>
+                
+                <div class="code-block">
+// File System API Lazy Loader (Mock)
+function fileSystemLazyLoad(node, done, opts, delay) {
+  const page = opts && opts.page ? opts.page : 1;
+  const pageSize = opts && opts.pageSize ? opts.pageSize : 10;
+  
+  // Simulate file system structure
+  const mockFileSystem = {
+    'Documents': [
+      { name: 'report.pdf', type: 'file', size: '2.3MB', id: 1 },
+      { name: 'presentation.pptx', type: 'file', size: '5.1MB', id: 2 },
+      { name: 'spreadsheet.xlsx', type: 'file', size: '1.8MB', id: 3 },
+      { name: 'Projects', type: 'dir', id: 4 },
+      { name: 'Archive', type: 'dir', id: 5 }
+    ],
+    'Pictures': [
+      { name: 'vacation.jpg', type: 'file', size: '3.2MB', id: 6 },
+      { name: 'family.png', type: 'file', size: '1.5MB', id: 7 },
+      { name: 'Screenshots', type: 'dir', id: 8 }
+    ],
+    'Music': [
+      { name: 'playlist.mp3', type: 'file', size: '8.7MB', id: 9 },
+      { name: 'album.flac', type: 'file', size: '45.2MB', id: 10 }
+    ]
+  };
+  
+  setTimeout(() => {
+    let data = [];
+    if (node.label === 'Documents' || node.label === 'Pictures' || node.label === 'Music') {
+      data = mockFileSystem[node.label] || [];
+    } else if (node.label === 'Projects') {
+      data = [
+        { name: 'web-app', type: 'dir', id: 11 },
+        { name: 'mobile-app', type: 'dir', id: 12 },
+        { name: 'api-backend', type: 'dir', id: 13 }
+      ];
+    } else if (node.label === 'Archive') {
+      data = [
+        { name: 'old-docs.zip', type: 'file', size: '12.5MB', id: 14 },
+        { name: 'backup.tar.gz', type: 'file', size: '89.3MB', id: 15 }
+      ];
+    } else if (node.label === 'Screenshots') {
+      data = [
+        { name: 'screenshot-2024-01.png', type: 'file', size: '2.1MB', id: 16 },
+        { name: 'screenshot-2024-02.png', type: 'file', size: '1.9MB', id: 17 }
+      ];
+    } else {
+      data = [
+        { name: 'index.html', type: 'file', size: '15KB', id: 18 },
+        { name: 'style.css', type: 'file', size: '8KB', id: 19 },
+        { name: 'script.js', type: 'file', size: '25KB', id: 20 }
+      ];
+    }
+    
+    const start = (page - 1) * pageSize;
+    const paginatedData = data.slice(start, start + pageSize);
+    
+    const children = paginatedData.map(item => ({
+      label: item.name,
+      badge: item.type === 'dir' ? '📁' : item.size || '📄',
+      tags: item.type === 'dir' ? ['directory'] : [item.name.split('.').pop() || 'file'],
+      id: item.id,
+      lazy: item.type === 'dir'
+    }));
+    
+    done(children, start + pageSize < data.length);
+  }, delay);
+}
+                </div>
+            </div>
+
+            <!-- Weather API Example -->
+            <div class="example-section">
+                <div class="example-title">
+                    <span>🌤️</span>
+                    Weather API Integration
+                </div>
+                <div class="example-description">
+                    Browse weather data by countries and cities using a mock weather API. 
+                    Shows how to handle nested API calls and data transformation.
+                </div>
+                
+                <div class="controls">
+                    <div class="input-group">
+                        <label>Country:</label>
+                        <input type="text" id="weather-country" value="United States" placeholder="Enter country name">
+                        <button class="btn btn-primary" onclick="loadWeatherData()">Load Weather</button>
+                    </div>
+                </div>
+                
+                <div class="tree-container" id="weather-tree"></div>
+                <div id="weather-status" class="api-status status-loading">Ready to load weather data...</div>
+                
+                <div class="code-block">
+// Weather API Lazy Loader (Mock)
+function weatherLazyLoad(node, done, opts, delay) {
+  const page = opts && opts.page ? opts.page : 1;
+  const pageSize = opts && opts.pageSize ? opts.pageSize : 10;
+  
+  // Mock weather data
+  const mockWeatherData = {
+    'United States': [
+      { name: 'New York', type: 'city', id: 1 },
+      { name: 'Los Angeles', type: 'city', id: 2 },
+      { name: 'Chicago', type: 'city', id: 3 },
+      { name: 'Houston', type: 'city', id: 4 },
+      { name: 'Phoenix', type: 'city', id: 5 }
+    ],
+    'United Kingdom': [
+      { name: 'London', type: 'city', id: 6 },
+      { name: 'Manchester', type: 'city', id: 7 },
+      { name: 'Birmingham', type: 'city', id: 8 },
+      { name: 'Liverpool', type: 'city', id: 9 }
+    ],
+    'Canada': [
+      { name: 'Toronto', type: 'city', id: 10 },
+      { name: 'Vancouver', type: 'city', id: 11 },
+      { name: 'Montreal', type: 'city', id: 12 }
+    ]
+  };
+  
+  setTimeout(() => {
+    let data = [];
+    
+    if (node.label === 'Countries') {
+      data = Object.keys(mockWeatherData).map((country, index) => ({
+        name: country,
+        type: 'country',
+        id: index + 100
+      }));
+    } else if (mockWeatherData[node.label]) {
+      data = mockWeatherData[node.label];
+    } else if (node.type === 'city') {
+      const conditions = ['☀️ Sunny', '🌧️ Rainy', '⛅ Partly Cloudy', '❄️ Snowy', '🌤️ Cloudy'];
+      const temperatures = ['22°C', '18°C', '25°C', '15°C', '20°C'];
+      
+      data = [
+        { name: 'Current Weather', type: 'weather', condition: conditions[Math.floor(Math.random() * conditions.length)], temp: temperatures[Math.floor(Math.random() * temperatures.length)], id: node.id * 1000 + 1 },
+        { name: 'Forecast (3 days)', type: 'forecast', id: node.id * 1000 + 2 },
+        { name: 'Historical Data', type: 'history', id: node.id * 1000 + 3 }
+      ];
+    } else if (node.label === 'Forecast (3 days)') {
+      data = [
+        { name: 'Day 1: ☀️ 24°C', type: 'forecast-day', id: node.id * 10 + 1 },
+        { name: 'Day 2: 🌧️ 19°C', type: 'forecast-day', id: node.id * 10 + 2 },
+        { name: 'Day 3: ⛅ 22°C', type: 'forecast-day', id: node.id * 10 + 3 }
+      ];
+    }
+    
+    const start = (page - 1) * pageSize;
+    const paginatedData = data.slice(start, start + pageSize);
+    
+    const children = paginatedData.map(item => ({
+      label: item.name,
+      badge: item.type === 'weather' ? item.temp : (item.type === 'forecast-day' ? '📅' : '🌍'),
+      tags: [item.type],
+      id: item.id,
+      lazy: item.type === 'country' || item.type === 'city' || item.type === 'forecast'
+    }));
+    
+    done(children, start + pageSize < data.length);
+  }, delay);
+}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables to store tree instances
+        let githubTree, jsonTree, filesystemTree, weatherTree;
+
+        // GitHub API Functions
+        function loadGitHubUser() {
+            const username = document.getElementById('github-username').value.trim();
+            if (!username) {
+                updateStatus('github', 'error', 'Please enter a username');
+                return;
+            }
+
+            updateStatus('github', 'loading', 'Loading GitHub data...');
+            
+            const data = [
+                { 
+                    label: `GitHub User: ${username}`, 
+                    open: true,
+                    children: [
+                        { label: 'Repositories', lazy: true, username: username },
+                        { label: 'Followers', lazy: true, username: username },
+                        { label: 'Following', lazy: true, username: username }
+                    ]
+                }
+            ];
+
+            $('#github-tree').empty().radixTree({
+                data: data,
+                lazyLoad: githubLazyLoad,
+                lazyLoadDelay: 1000,
+                pageSize: 10,
+                onExpand: (node) => {
+                    if (node.label === 'Repositories' || node.label === 'Followers' || node.label === 'Following') {
+                        updateStatus('github', 'success', `Loaded ${node.label.toLowerCase()} for ${username}`);
+                    }
+                },
+                onCheck: (node) => {
+                    console.log('Checked:', node.label);
+                }
+            });
+
+            updateStatus('github', 'success', `Loaded GitHub user: ${username}`);
+        }
+
+        // JSONPlaceholder API Functions
+        function loadJSONPlaceholder() {
+            updateStatus('json', 'loading', 'Loading JSONPlaceholder data...');
+            
+            const data = [
+                {
+                    label: 'JSONPlaceholder API',
+                    open: true,
+                    children: [
+                        { label: 'Users', lazy: true },
+                        { label: 'Posts', lazy: true },
+                        { label: 'Comments', lazy: true },
+                        { label: 'Albums', lazy: true }
+                    ]
+                }
+            ];
+
+            $('#json-tree').empty().radixTree({
+                data: data,
+                lazyLoad: jsonPlaceholderLazyLoad,
+                lazyLoadDelay: 800,
+                pageSize: 8,
+                onExpand: (node) => {
+                    if (['Users', 'Posts', 'Comments', 'Albums'].includes(node.label)) {
+                        updateStatus('json', 'success', `Loaded ${node.label.toLowerCase()}`);
+                    }
+                }
+            });
+
+            updateStatus('json', 'success', 'JSONPlaceholder data loaded');
+        }
+
+        function clearJSONPlaceholder() {
+            $('#json-tree').empty();
+            updateStatus('json', 'loading', 'Ready to load JSONPlaceholder data...');
+        }
+
+        // File System API Functions
+        function loadFileSystem() {
+            updateStatus('filesystem', 'loading', 'Loading file system...');
+            
+            const data = [
+                {
+                    label: 'File System',
+                    open: true,
+                    children: [
+                        { label: 'Documents', lazy: true },
+                        { label: 'Pictures', lazy: true },
+                        { label: 'Music', lazy: true }
+                    ]
+                }
+            ];
+
+            $('#filesystem-tree').empty().radixTree({
+                data: data,
+                lazyLoad: fileSystemLazyLoad,
+                lazyLoadDelay: 600,
+                pageSize: 5,
+                onExpand: (node) => {
+                    if (['Documents', 'Pictures', 'Music'].includes(node.label)) {
+                        updateStatus('filesystem', 'success', `Loaded ${node.label.toLowerCase()}`);
+                    }
+                }
+            });
+
+            updateStatus('filesystem', 'success', 'File system loaded');
+        }
+
+        function clearFileSystem() {
+            $('#filesystem-tree').empty();
+            updateStatus('filesystem', 'loading', 'Ready to load file system...');
+        }
+
+        // Weather API Functions
+        function loadWeatherData() {
+            const country = document.getElementById('weather-country').value.trim();
+            if (!country) {
+                updateStatus('weather', 'error', 'Please enter a country name');
+                return;
+            }
+
+            updateStatus('weather', 'loading', 'Loading weather data...');
+            
+            const data = [
+                {
+                    label: 'Weather Data',
+                    open: true,
+                    children: [
+                        { label: 'Countries', lazy: true }
+                    ]
+                }
+            ];
+
+            $('#weather-tree').empty().radixTree({
+                data: data,
+                lazyLoad: weatherLazyLoad,
+                lazyLoadDelay: 500,
+                pageSize: 6,
+                onExpand: (node) => {
+                    if (node.label === 'Countries') {
+                        updateStatus('weather', 'success', 'Loaded countries');
+                    } else if (node.type === 'country') {
+                        updateStatus('weather', 'success', `Loaded cities for ${node.label}`);
+                    }
+                }
+            });
+
+            updateStatus('weather', 'success', 'Weather data loaded');
+        }
+
+        // Utility Functions
+        function updateStatus(type, status, message) {
+            const statusElement = document.getElementById(`${type}-status`);
+            statusElement.className = `api-status status-${status}`;
+            statusElement.textContent = message;
+        }
+
+        // Initialize examples on page load
+        $(document).ready(function() {
+            // Load initial examples
+            loadGitHubUser();
+            loadJSONPlaceholder();
+            loadFileSystem();
+            loadWeatherData();
+        });
+
+        // API Lazy Loader Functions (defined in the code blocks above)
+        function githubLazyLoad(node, done, opts, delay) {
+            const page = opts && opts.page ? opts.page : 1;
+            const perPage = opts && opts.pageSize ? opts.pageSize : 10;
+            
+            let endpoint = '';
+            if (node.label === 'Repositories') {
+                endpoint = `https://api.github.com/users/${node.username}/repos?page=${page}&per_page=${perPage}`;
+            } else if (node.label === 'Followers') {
+                endpoint = `https://api.github.com/users/${node.username}/followers?page=${page}&per_page=${perPage}`;
+            } else if (node.label === 'Following') {
+                endpoint = `https://api.github.com/users/${node.username}/following?page=${page}&per_page=${perPage}`;
+            } else if (node.repoName) {
+                endpoint = `https://api.github.com/repos/${node.username}/${node.repoName}/contents?page=${page}&per_page=${perPage}`;
+            }
+            
+            if (endpoint) {
+                fetch(endpoint)
+                    .then(response => {
+                        if (!response.ok) throw new Error('API limit exceeded or user not found');
+                        return response.json();
+                    })
+                    .then(data => {
+                        const children = data.map(item => {
+                            if (item.type === 'dir') {
+                                return {
+                                    label: item.name,
+                                    lazy: true,
+                                    repoName: node.repoName || item.name,
+                                    username: node.username,
+                                    badge: '📁',
+                                    tags: ['directory']
+                                };
+                            } else if (item.type === 'file') {
+                                return {
+                                    label: item.name,
+                                    badge: '📄',
+                                    tags: [item.name.split('.').pop() || 'file'],
+                                    id: item.sha
+                                };
+                            } else {
+                                return {
+                                    label: item.login || item.name || item.full_name,
+                                    badge: item.public_repos || item.followers || '👤',
+                                    tags: item.type === 'User' ? ['user'] : ['repo'],
+                                    id: item.id
+                                };
+                            }
+                        });
+                        done(children, data.length === perPage);
+                    })
+                    .catch(error => {
+                        console.warn('GitHub API Error:', error.message);
+                        done([{ label: 'Mock Repository 1', badge: '⭐', tags: ['repo'], id: 1 }], false);
+                    });
+            }
+        }
+
+        function jsonPlaceholderLazyLoad(node, done, opts, delay) {
+            const page = opts && opts.page ? opts.page : 1;
+            const pageSize = opts && opts.pageSize ? opts.pageSize : 10;
+            const start = (page - 1) * pageSize;
+            
+            let endpoint = '';
+            if (node.label === 'Users') {
+                endpoint = 'https://jsonplaceholder.typicode.com/users';
+            } else if (node.label === 'Posts') {
+                endpoint = 'https://jsonplaceholder.typicode.com/posts';
+            } else if (node.label === 'Comments') {
+                endpoint = 'https://jsonplaceholder.typicode.com/comments';
+            } else if (node.label === 'Albums') {
+                endpoint = 'https://jsonplaceholder.typicode.com/albums';
+            } else if (node.userId) {
+                endpoint = `https://jsonplaceholder.typicode.com/posts?userId=${node.userId}`;
+            }
+            
+            if (endpoint) {
+                fetch(endpoint)
+                    .then(response => response.json())
+                    .then(data => {
+                        const paginatedData = data.slice(start, start + pageSize);
+                        const children = paginatedData.map(item => {
+                            if (item.title) {
+                                return {
+                                    label: item.title.substring(0, 30) + (item.title.length > 30 ? '...' : ''),
+                                    badge: item.id,
+                                    tags: ['post'],
+                                    id: item.id,
+                                    userId: item.userId
+                                };
+                            } else if (item.name) {
+                                return {
+                                    label: item.name,
+                                    badge: item.id,
+                                    tags: ['user'],
+                                    id: item.id,
+                                    email: item.email
+                                };
+                            } else {
+                                return {
+                                    label: item.name || item.title || `Item ${item.id}`,
+                                    badge: item.id,
+                                    tags: ['item'],
+                                    id: item.id
+                                };
+                            }
+                        });
+                        done(children, start + pageSize < data.length);
+                    })
+                    .catch(error => {
+                        console.warn('JSONPlaceholder API Error:', error.message);
+                        done([{ label: 'Mock Post 1', badge: 1, tags: ['post'], id: 1 }], false);
+                    });
+            }
+        }
+
+        function fileSystemLazyLoad(node, done, opts, delay) {
+            const page = opts && opts.page ? opts.page : 1;
+            const pageSize = opts && opts.pageSize ? opts.pageSize : 10;
+            
+            const mockFileSystem = {
+                'Documents': [
+                    { name: 'report.pdf', type: 'file', size: '2.3MB', id: 1 },
+                    { name: 'presentation.pptx', type: 'file', size: '5.1MB', id: 2 },
+                    { name: 'spreadsheet.xlsx', type: 'file', size: '1.8MB', id: 3 },
+                    { name: 'Projects', type: 'dir', id: 4 },
+                    { name: 'Archive', type: 'dir', id: 5 }
+                ],
+                'Pictures': [
+                    { name: 'vacation.jpg', type: 'file', size: '3.2MB', id: 6 },
+                    { name: 'family.png', type: 'file', size: '1.5MB', id: 7 },
+                    { name: 'Screenshots', type: 'dir', id: 8 }
+                ],
+                'Music': [
+                    { name: 'playlist.mp3', type: 'file', size: '8.7MB', id: 9 },
+                    { name: 'album.flac', type: 'file', size: '45.2MB', id: 10 }
+                ]
+            };
+            
+            setTimeout(() => {
+                let data = [];
+                if (node.label === 'Documents' || node.label === 'Pictures' || node.label === 'Music') {
+                    data = mockFileSystem[node.label] || [];
+                } else if (node.label === 'Projects') {
+                    data = [
+                        { name: 'web-app', type: 'dir', id: 11 },
+                        { name: 'mobile-app', type: 'dir', id: 12 },
+                        { name: 'api-backend', type: 'dir', id: 13 }
+                    ];
+                } else if (node.label === 'Archive') {
+                    data = [
+                        { name: 'old-docs.zip', type: 'file', size: '12.5MB', id: 14 },
+                        { name: 'backup.tar.gz', type: 'file', size: '89.3MB', id: 15 }
+                    ];
+                } else if (node.label === 'Screenshots') {
+                    data = [
+                        { name: 'screenshot-2024-01.png', type: 'file', size: '2.1MB', id: 16 },
+                        { name: 'screenshot-2024-02.png', type: 'file', size: '1.9MB', id: 17 }
+                    ];
+                } else {
+                    data = [
+                        { name: 'index.html', type: 'file', size: '15KB', id: 18 },
+                        { name: 'style.css', type: 'file', size: '8KB', id: 19 },
+                        { name: 'script.js', type: 'file', size: '25KB', id: 20 }
+                    ];
+                }
+                
+                const start = (page - 1) * pageSize;
+                const paginatedData = data.slice(start, start + pageSize);
+                
+                const children = paginatedData.map(item => ({
+                    label: item.name,
+                    badge: item.type === 'dir' ? '📁' : item.size || '📄',
+                    tags: item.type === 'dir' ? ['directory'] : [item.name.split('.').pop() || 'file'],
+                    id: item.id,
+                    lazy: item.type === 'dir'
+                }));
+                
+                done(children, start + pageSize < data.length);
+            }, delay);
+        }
+
+        function weatherLazyLoad(node, done, opts, delay) {
+            const page = opts && opts.page ? opts.page : 1;
+            const pageSize = opts && opts.pageSize ? opts.pageSize : 10;
+            
+            const mockWeatherData = {
+                'United States': [
+                    { name: 'New York', type: 'city', id: 1 },
+                    { name: 'Los Angeles', type: 'city', id: 2 },
+                    { name: 'Chicago', type: 'city', id: 3 },
+                    { name: 'Houston', type: 'city', id: 4 },
+                    { name: 'Phoenix', type: 'city', id: 5 }
+                ],
+                'United Kingdom': [
+                    { name: 'London', type: 'city', id: 6 },
+                    { name: 'Manchester', type: 'city', id: 7 },
+                    { name: 'Birmingham', type: 'city', id: 8 },
+                    { name: 'Liverpool', type: 'city', id: 9 }
+                ],
+                'Canada': [
+                    { name: 'Toronto', type: 'city', id: 10 },
+                    { name: 'Vancouver', type: 'city', id: 11 },
+                    { name: 'Montreal', type: 'city', id: 12 }
+                ]
+            };
+            
+            setTimeout(() => {
+                let data = [];
+                
+                if (node.label === 'Countries') {
+                    data = Object.keys(mockWeatherData).map((country, index) => ({
+                        name: country,
+                        type: 'country',
+                        id: index + 100
+                    }));
+                } else if (mockWeatherData[node.label]) {
+                    data = mockWeatherData[node.label];
+                } else if (node.type === 'city') {
+                    const conditions = ['☀️ Sunny', '🌧️ Rainy', '⛅ Partly Cloudy', '❄️ Snowy', '🌤️ Cloudy'];
+                    const temperatures = ['22°C', '18°C', '25°C', '15°C', '20°C'];
+                    
+                    data = [
+                        { name: 'Current Weather', type: 'weather', condition: conditions[Math.floor(Math.random() * conditions.length)], temp: temperatures[Math.floor(Math.random() * temperatures.length)], id: node.id * 1000 + 1 },
+                        { name: 'Forecast (3 days)', type: 'forecast', id: node.id * 1000 + 2 },
+                        { name: 'Historical Data', type: 'history', id: node.id * 1000 + 3 }
+                    ];
+                } else if (node.label === 'Forecast (3 days)') {
+                    data = [
+                        { name: 'Day 1: ☀️ 24°C', type: 'forecast-day', id: node.id * 10 + 1 },
+                        { name: 'Day 2: 🌧️ 19°C', type: 'forecast-day', id: node.id * 10 + 2 },
+                        { name: 'Day 3: ⛅ 22°C', type: 'forecast-day', id: node.id * 10 + 3 }
+                    ];
+                }
+                
+                const start = (page - 1) * pageSize;
+                const paginatedData = data.slice(start, start + pageSize);
+                
+                const children = paginatedData.map(item => ({
+                    label: item.name,
+                    badge: item.type === 'weather' ? item.temp : (item.type === 'forecast-day' ? '📅' : '🌍'),
+                    tags: [item.type],
+                    id: item.id,
+                    lazy: item.type === 'country' || item.type === 'city' || item.type === 'forecast'
+                }));
+                
+                done(children, start + pageSize < data.length);
+            }, delay);
+        }
+    </script>
+</body>
+</html> 

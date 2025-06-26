@@ -174,11 +174,11 @@
   stroke: #ffa000;
 }
 .radix-checkbox-svg.disabled .box rect {
-  fill: #f0f0f0;
-  stroke: #e0e0e0;
+  fill: #dcd2d2;
+  stroke: #dcd2d2;
 }
 .radix-checkbox-svg.disabled {
-  opacity: 0.7;
+  opacity: 0.95;
   cursor: not-allowed;
 }
 .radix-checkbox-svg.focus {
@@ -303,6 +303,29 @@
       parent.checked = false;
       parent.indeterminate = true;
     }
+  }
+
+  // Helper: get sibling nodes of a given node
+  function getSiblingNodes(node, idNodeMap) {
+    if (!node._radixParentId) {
+      // Root level nodes - find all nodes at the same level
+      const rootNodes = [];
+      Object.values(idNodeMap).forEach(n => {
+        if (!n._radixParentId) {
+          rootNodes.push(n);
+        }
+      });
+      return rootNodes.filter(n => n._radixId !== node._radixId);
+    }
+    
+    // Get parent node
+    const parent = idNodeMap[node._radixParentId];
+    if (!parent || !parent.children) {
+      return [];
+    }
+    
+    // Return all siblings except the current node
+    return parent.children.filter(sibling => sibling._radixId !== node._radixId);
   }
 
   // Helper: generate unique id for each checkbox (now with idPrefix)
@@ -546,7 +569,9 @@
             }
           }
         }
-        callbacks.onCheck && callbacks.onCheck(node, checkbox);
+        // Get sibling nodes for the onCheck callback
+        const siblingNodes = getSiblingNodes(node, idNodeMap);
+        callbacks.onCheck && callbacks.onCheck(node, checkbox, siblingNodes);
       });
       // Keyboard navigation for checkbox
       checkbox.addEventListener('keydown', function (e) {
@@ -663,8 +688,23 @@
         });
         summary.addEventListener('click', e => {
           e.stopPropagation();
+          // Store the previous state before the click
+          const wasOpen = node.open;
+          
           setTimeout(() => {
             node.open = details.open;
+            
+            // Determine the action based on state change
+            if (!wasOpen && details.open) {
+              // Was closed, now open = EXPAND
+              const siblings = getSiblingNodes(node, idNodeMap);
+              callbacks.onExpand && callbacks.onExpand(node, details, siblings);
+            } else if (wasOpen && !details.open) {
+              // Was open, now closed = COLLAPSE
+              const siblings = getSiblingNodes(node, idNodeMap);
+              callbacks.onCollapse && callbacks.onCollapse(node, details, siblings);
+            }
+            
             // Lazy loading
             if (details.open && node.lazy && !node._lazyLoaded && typeof settings.lazyLoad === 'function') {
               // Show loading indicator
@@ -702,11 +742,7 @@
               }, settings.lazyLoadDelay);
             }
           }, 0);
-          if (details.open) {
-            callbacks.onExpand && callbacks.onExpand(node, details);
-          } else {
-            callbacks.onCollapse && callbacks.onCollapse(node, details);
-          }
+          
           callbacks.onClick && callbacks.onClick(node, summary);
         });
         details.appendChild(summary);
@@ -813,23 +849,25 @@
           return checked;
         case 'setChecked': {
           const [id, checkedVal] = args;
+          // Build idNodeMap first
+          const idPrefix = $container.data('radixTreeIdPrefix');
+          const checkboxIdCounter = { val: 0 };
+          const idNodeMap = buildIdNodeMap(settings.data, [], {}, null, idPrefix, checkboxIdCounter);
+          
           const node = idNodeMap[id];
           if (node) {
             setCheckedRecursive(node, checkedVal);
             // update parents
-            function updateParents(node) {
+            function updateParents(node, idNodeMap) {
               if (!node._radixParentId) return;
               const parent = idNodeMap[node._radixParentId];
               if (parent) {
                 updateParentChecked(node, parent);
-                updateParents(parent);
+                updateParents(parent, idNodeMap);
               }
             }
-            updateParents(node);
+            updateParents(node, idNodeMap);
             $container.empty();
-            const idPrefix = $container.data('radixTreeIdPrefix');
-            const checkboxIdCounter = { val: 0 };
-            const idNodeMap = buildIdNodeMap(settings.data, [], {}, null, idPrefix, checkboxIdCounter);
             const $treeWrapper = $('<div class="radix-tree"></div>');
             $treeWrapper.append(renderTree(settings.data, settings.callbacks, null, [], settings, idNodeMap, $container, false, idPrefix, checkboxIdCounter));
             $container.append($treeWrapper);
@@ -879,6 +917,18 @@
           $treeWrapper.append(renderTree(settings.data, settings.callbacks, null, [], settings, idNodeMap, $container, false, idPrefix, checkboxIdCounter));
           $container.append($treeWrapper);
           return;
+        }
+        case 'getSiblings': {
+          const [nodeId] = args;
+          // Rebuild idNodeMap with current settings to ensure IDs match
+          const idPrefix = $container.data('radixTreeIdPrefix');
+          const checkboxIdCounter = { val: 0 };
+          const currentIdNodeMap = buildIdNodeMap(settings.data, [], {}, null, idPrefix, checkboxIdCounter);
+          const node = currentIdNodeMap[nodeId];
+          if (node) {
+            return getSiblingNodes(node, currentIdNodeMap);
+          }
+          return [];
         }
       }
       return;

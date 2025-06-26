@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multi-Level Lazy Loading with Real-time APIs</title>
+  <script src="https://code.jquery.com/jquery-3.7.1.slim.min.js"
+    integrity="sha256-kmHvs0B+OpCW5GVHUNjv9rOmY0IvSIRcf7zGUDTDQM8=" crossorigin="anonymous"></script>
+  <script src="../tree.min.js"></script>
+  <style>
+    html {
+      height: 100%;
+      font-family: Proza, sans-serif;
+      font-size: clamp(18px, 100vw / var(--width), 20px);
+      font-feature-settings: 'onum', 'pnum';
+      font-weight: 300;
+      margin: auto;
+      max-width: 800px;
+      margin-top: 120px;
+      font-size: 20px;
+    }
+    
+    .controls {
+      margin: 20px 0;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      background: #2563eb;
+      color: white;
+      transition: all 0.2s;
+    }
+    
+    .btn:hover {
+      background: #1d4ed8;
+    }
+    
+    .input-group {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    
+    .input-group input {
+      padding: 8px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    
+    .status {
+      margin-top: 10px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    .status-loading {
+      background: #fef3c7;
+      color: #d97706;
+      border: 1px solid #fed7aa;
+    }
+    
+    .status-success {
+      background: #dcfce7;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+    }
+    
+    .status-error {
+      background: #fef2f2;
+      color: #dc2626;
+      border: 1px solid #fecaca;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="controls">
+    <div class="input-group">
+      <label>GitHub Username:</label>
+      <input type="text" id="github-username" value="octocat" placeholder="Enter GitHub username">
+      <button class="btn" onclick="loadGitHubUser()">Load User</button>
+    </div>
+  </div>
+  
+  <div id="status" class="status status-loading">Ready to load GitHub data...</div>
+  <div class="radix-tree"></div>
+  
+  <hr style="margin: 48px 0;">
+  <div class="controls">
+    <div class="input-group">
+      <label>Employee Directory:</label>
+      <button class="btn" onclick="loadEmployeeDirectory()">Load Directory</button>
+    </div>
+  </div>
+  <div id="emp-status" class="status status-loading">Ready to load employee directory...</div>
+  <div class="radix-tree-employee"></div>
+  
+  <script>
+    // Multi-Level GitHub API Lazy Loader
+    function githubLazyLoad(node, done, opts, delay) {
+      const page = opts && opts.page ? opts.page : 1;
+      const perPage = opts && opts.pageSize ? opts.pageSize : 10;
+
+      let endpoint = '';
+      
+      // Level 1: User's repositories, followers, following
+      if (node.label === 'Repositories') {
+        endpoint = `https://api.github.com/users/${node.username}/repos?page=${page}&per_page=${perPage}&sort=updated`;
+      } else if (node.label === 'Followers') {
+        endpoint = `https://api.github.com/users/${node.username}/followers?page=${page}&per_page=${perPage}`;
+      } else if (node.label === 'Following') {
+        endpoint = `https://api.github.com/users/${node.username}/following?page=${page}&per_page=${perPage}`;
+      }
+      // Level 2: Repository contents (files and folders)
+      else if (node.repoName && node.username) {
+        endpoint = `https://api.github.com/repos/${node.username}/${node.repoName}/contents?page=${page}&per_page=${perPage}`;
+      }
+      // Level 3: Subdirectory contents
+      else if (node.path && node.repoName && node.username) {
+        endpoint = `https://api.github.com/repos/${node.username}/${node.repoName}/contents/${node.path}?page=${page}&per_page=${perPage}`;
+      }
+      // Level 4: User details (when clicking on a user)
+      else if (node.userLogin) {
+        endpoint = `https://api.github.com/users/${node.userLogin}`;
+      }
+      // Level 5: User's repositories (when viewing a user's repos)
+      else if (node.userRepos) {
+        endpoint = `https://api.github.com/users/${node.userRepos}/repos?page=${page}&per_page=${perPage}&sort=updated`;
+      }
+
+      if (endpoint) {
+        fetch(endpoint)
+          .then(response => {
+            if (!response.ok) {
+              if (response.status === 403) {
+                throw new Error('API rate limit exceeded');
+              } else if (response.status === 404) {
+                throw new Error('Resource not found');
+              } else {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+              }
+            }
+            return response.json();
+          })
+          .then(data => {
+            let children = [];
+            
+            // Handle different types of API responses
+            if (Array.isArray(data)) {
+              // Array response (repos, followers, contents, etc.)
+              children = data.map(item => {
+                if (item.type === 'dir') {
+                  // Directory in repository
+                  return {
+                    label: item.name,
+                    badge: '📁',
+                    tags: ['directory'],
+                    id: item.sha,
+                    lazy: true,
+                    path: node.path ? `${node.path}/${item.name}` : item.name,
+                    repoName: node.repoName,
+                    username: node.username
+                  };
+                } else if (item.type === 'file') {
+                  // File in repository
+                  return {
+                    label: item.name,
+                    badge: '📄',
+                    tags: [item.name.split('.').pop() || 'file'],
+                    id: item.sha,
+                    size: item.size
+                  };
+                } else if (item.login) {
+                  // User (follower/following)
+                  return {
+                    label: item.login,
+                    badge: item.followers || '👤',
+                    tags: ['user'],
+                    id: item.id,
+                    lazy: true,
+                    userLogin: item.login
+                  };
+                } else if (item.name) {
+                  // Repository
+                  return {
+                    label: item.name,
+                    badge: item.stargazers_count || '⭐',
+                    tags: ['repo'],
+                    id: item.id,
+                    lazy: true,
+                    repoName: item.name,
+                    username: node.username,
+                    description: item.description,
+                    language: item.language
+                  };
+                }
+              });
+            } else if (data.login) {
+              // Single user object
+              children = [
+                {
+                  label: `Profile: ${data.name || data.login}`,
+                  badge: data.public_repos || '👤',
+                  tags: ['profile'],
+                  id: data.id,
+                  bio: data.bio,
+                  location: data.location
+                },
+                {
+                  label: 'Repositories',
+                  badge: data.public_repos || '📦',
+                  tags: ['repos'],
+                  lazy: true,
+                  userRepos: data.login
+                },
+                {
+                  label: 'Followers',
+                  badge: data.followers || '👥',
+                  tags: ['followers'],
+                  lazy: true,
+                  username: data.login
+                },
+                {
+                  label: 'Following',
+                  badge: data.following || '👥',
+                  tags: ['following'],
+                  lazy: true,
+                  username: data.login
+                }
+              ];
+            }
+            
+            // Determine if there are more pages
+            const hasMore = Array.isArray(data) && data.length === perPage;
+            done(children, hasMore);
+          })
+          .catch(error => {
+            console.warn('GitHub API Error:', error.message);
+            
+            // Provide fallback data based on the node type
+            let fallbackData = [];
+            
+            if (node.label === 'Repositories') {
+              fallbackData = [
+                { label: 'Mock Repository 1', badge: '⭐', tags: ['repo'], id: 1, lazy: true, repoName: 'mock-repo-1', username: node.username },
+                { label: 'Mock Repository 2', badge: '⭐', tags: ['repo'], id: 2, lazy: true, repoName: 'mock-repo-2', username: node.username }
+              ];
+            } else if (node.repoName) {
+              fallbackData = [
+                { label: 'README.md', badge: '📄', tags: ['md'], id: 3 },
+                { label: 'src', badge: '📁', tags: ['directory'], id: 4, lazy: true, path: 'src', repoName: node.repoName, username: node.username }
+              ];
+            } else if (node.userLogin) {
+              fallbackData = [
+                { label: 'Profile: Mock User', badge: '👤', tags: ['profile'], id: 5 },
+                { label: 'Repositories', badge: '📦', tags: ['repos'], lazy: true, userRepos: node.userLogin }
+              ];
+            } else {
+              fallbackData = [{ label: 'Mock Item', badge: '📄', tags: ['item'], id: 6 }];
+            }
+            
+            done(fallbackData, false);
+          });
+      }
+    }
+
+    function loadGitHubUser() {
+      const username = document.getElementById('github-username').value.trim();
+      if (!username) {
+        updateStatus('error', 'Please enter a GitHub username');
+        return;
+      }
+
+      updateStatus('loading', `Loading GitHub data for ${username}...`);
+      
+      $('.radix-tree').radixTree({
+        data: [
+          {
+            label: `GitHub User: ${username}`,
+            open: true,
+            children: [
+              { 
+                label: 'Repositories', 
+                lazy: true, 
+                username: username,
+                badge: '📦',
+                tags: ['repos']
+              },
+              { 
+                label: 'Followers', 
+                lazy: true, 
+                username: username,
+                badge: '👥',
+                tags: ['followers']
+              },
+              { 
+                label: 'Following', 
+                lazy: true, 
+                username: username,
+                badge: '👥',
+                tags: ['following']
+              }
+            ]
+          }
+        ],
+        lazyLoad: githubLazyLoad,
+        lazyLoadDelay: 800,
+        pageSize: 20,
+        onExpand: (node) => {
+          if (node.label === 'Repositories') {
+            updateStatus('success', `Loaded repositories for ${username}`);
+          } else if (node.label === 'Followers') {
+            updateStatus('success', `Loaded followers for ${username}`);
+          } else if (node.label === 'Following') {
+            updateStatus('success', `Loaded following for ${username}`);
+          } else if (node.repoName) {
+            updateStatus('success', `Loaded contents of ${node.repoName}`);
+          } else if (node.userLogin) {
+            updateStatus('success', `Loaded profile for ${node.userLogin}`);
+          }
+        },
+        onClick: (node) => {
+          if (node.userLogin && !node.children) {
+            // Load user details when clicking on a user
+            updateStatus('loading', `Loading profile for ${node.userLogin}...`);
+          }
+        },
+        onCheck: (node) => {
+          console.log('Checked:', node.label, node);
+        }
+      });
+
+      updateStatus('success', `GitHub user ${username} loaded successfully`);
+    }
+
+    function updateStatus(type, message) {
+      const statusElement = document.getElementById('status');
+      statusElement.className = `status status-${type}`;
+      statusElement.textContent = message;
+    }
+
+    // Simple Employee Directory Lazy Loader (single endpoint, multi-level)
+    function employeeLazyLoad(node, done) {
+      // Simulate a single endpoint returning the whole org structure
+      // In real use, replace this with fetch('.../api/employees').then(...)
+      const orgData = [
+        {
+          id: 1, label: 'Engineering', lazy: true, children: [
+            { id: 2, label: 'Frontend Team', lazy: true, children: [
+              { id: 3, label: 'Alice Johnson', title: 'Senior Engineer' },
+              { id: 4, label: 'Bob Lee', title: 'Engineer' }
+            ]},
+            { id: 5, label: 'Backend Team', lazy: true, children: [
+              { id: 6, label: 'Carol Smith', title: 'Lead Engineer' },
+              { id: 7, label: 'David Kim', title: 'Engineer' }
+            ]}
+          ]
+        },
+        {
+          id: 8, label: 'HR', lazy: true, children: [
+            { id: 9, label: 'Recruitment', lazy: true, children: [
+              { id: 10, label: 'Eve Adams', title: 'Recruiter' }
+            ]}
+          ]
+        }
+      ];
+      // Helper to find children for a given node
+      function findChildren(node, data) {
+        if (!node) return data;
+        let queue = [...data];
+        while (queue.length) {
+          const curr = queue.shift();
+          if (curr.id === node.id) return curr.children || [];
+          if (curr.children) queue.push(...curr.children);
+        }
+        return [];
+      }
+      setTimeout(() => {
+        const children = findChildren(node, orgData).map(child => ({
+          label: child.label,
+          id: child.id,
+          lazy: !!child.children,
+          badge: child.title || undefined,
+          tags: child.title ? ['employee'] : (child.children ? ['team','department'] : [])
+        }));
+        done(children, false);
+      }, 400);
+    }
+    function loadEmployeeDirectory() {
+      document.getElementById('emp-status').className = 'status status-loading';
+      document.getElementById('emp-status').textContent = 'Loading employee directory...';
+      $(".radix-tree-employee").radixTree({
+        data: [
+          { label: 'Company', open: true, lazy: true, id: 0 }
+        ],
+        lazyLoad: employeeLazyLoad,
+        onExpand: (node) => {
+          document.getElementById('emp-status').className = 'status status-success';
+          document.getElementById('emp-status').textContent = `Loaded: ${node.label}`;
+        }
+      });
+      document.getElementById('emp-status').className = 'status status-success';
+      document.getElementById('emp-status').textContent = 'Employee directory loaded.';
+    }
+
+    // Initialize on page load
+    $(document).ready(function() {
+      loadGitHubUser();
+    });
+  </script>
+</body>
+
+</html>

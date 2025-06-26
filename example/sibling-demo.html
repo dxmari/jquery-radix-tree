@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sibling Nodes Demo - RadixTree</title>
+  <script src="https://code.jquery.com/jquery-3.7.1.slim.min.js"
+    integrity="sha256-kmHvs0B+OpCW5GVHUNjv9rOmY0IvSIRcf7zGUDTDQM8=" crossorigin="anonymous"></script>
+  <script src="../tree.js"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f8f9fa;
+    }
+
+    .demo-container {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      color: #2c3e50;
+      margin-bottom: 20px;
+    }
+
+    .info-panel {
+      background: #e3f2fd;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      border-left: 4px solid #2196f3;
+    }
+
+    .log-panel {
+      background: #f5f5f5;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 20px;
+      max-height: 300px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+    }
+
+    .log-entry {
+      margin-bottom: 8px;
+      padding: 5px;
+      border-radius: 4px;
+    }
+
+    .log-check {
+      background: #e8f5e8;
+      border-left: 3px solid #4caf50;
+    }
+
+    .log-siblings {
+      background: #fff3e0;
+      border-left: 3px solid #ff9800;
+    }
+
+    .controls {
+      margin: 20px 0;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      background: #2196f3;
+      color: white;
+      transition: background 0.2s;
+    }
+
+    .btn:hover {
+      background: #1976d2;
+    }
+
+    .btn.secondary {
+      background: #6c757d;
+    }
+
+    .btn.secondary:hover {
+      background: #545b62;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="demo-container">
+    <h1>🌳 Sibling Nodes Demo</h1>
+    
+    <div class="info-panel">
+      <strong>How it works:</strong>
+      <ul>
+        <li>Check/uncheck any node to see its siblings</li>
+        <li>Siblings are nodes that share the same parent</li>
+        <li>Complete node properties are available (id, checked, open, badge, tags, etc.)</li>
+        <li>Use the API buttons to get siblings programmatically</li>
+        <li>Check the console for detailed sibling information with all properties</li>
+      </ul>
+    </div>
+
+    <div class="controls">
+      <button class="btn" onclick="getCheckedSiblings()">Get Siblings of Checked Nodes</button>
+      <button class="btn" onclick="testGetSiblingsAPI()">Test GetSiblings API</button>
+      <button class="btn" onclick="testSetCheckedAPI()">Test SetChecked API</button>
+      <button class="btn secondary" onclick="clearLog()">Clear Log</button>
+    </div>
+
+    <div class="radix-tree-demo"></div>
+    
+    <div class="log-panel" id="logPanel">
+      <div class="log-entry">Ready to detect sibling nodes...</div>
+    </div>
+  </div>
+
+  <script>
+    // Sample data with clear sibling relationships
+    const demoData = [
+      {
+        id: 'fruits-category',
+        label: 'Fruits',
+        open: true,
+        checked: false,
+        badge: 4,
+        tags: ['category', 'food'],
+        category: 'produce',
+        children: [
+          { id: 'apple', label: 'Apple', checked: false, badge: '🍎', tags: ['red', 'sweet'] },
+          { id: 'banana', label: 'Banana', checked: false, badge: '🍌', tags: ['yellow', 'energy'] },
+          { id: 'orange', label: 'Orange', checked: false, badge: '🍊', tags: ['citrus', 'vitamin-c'] },
+          { id: 'grape', label: 'Grape', checked: false, badge: '🍇', tags: ['purple', 'small'] }
+        ]
+      },
+      {
+        id: 'vegetables-category',
+        label: 'Vegetables',
+        open: true,
+        checked: false,
+        badge: 3,
+        tags: ['category', 'food'],
+        category: 'produce',
+        children: [
+          { id: 'carrot', label: 'Carrot', checked: false, badge: '🥕', tags: ['orange', 'crunchy'] },
+          { id: 'broccoli', label: 'Broccoli', checked: false, badge: '🥦', tags: ['green', 'healthy'] },
+          { id: 'spinach', label: 'Spinach', checked: false, badge: '🥬', tags: ['leafy', 'iron'] }
+        ]
+      },
+      {
+        id: 'dairy-category',
+        label: 'Dairy',
+        open: true,
+        checked: false,
+        badge: 5,
+        tags: ['category', 'food'],
+        category: 'animal-product',
+        children: [
+          { id: 'milk', label: 'Milk', checked: false, badge: '🥛', tags: ['liquid', 'calcium'] },
+          { id: 'cheese', label: 'Cheese', checked: false, badge: '🧀', tags: ['solid', 'protein'] },
+          { id: 'yogurt', label: 'Yogurt', checked: false, badge: '🥛', tags: ['fermented', 'probiotic'] },
+          { id: 'butter', label: 'Butter', checked: false, badge: '🧈', tags: ['fat', 'cooking'] },
+          { id: 'cream', label: 'Cream', checked: false, badge: '🥛', tags: ['fat', 'whipping'] }
+        ]
+      }
+    ];
+
+    function addLog(message, type = 'check') {
+      const logPanel = document.getElementById('logPanel');
+      const logEntry = document.createElement('div');
+      logEntry.className = `log-entry log-${type}`;
+      logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+      logPanel.appendChild(logEntry);
+      logPanel.scrollTop = logPanel.scrollHeight;
+    }
+
+    function clearLog() {
+      document.getElementById('logPanel').innerHTML = '<div class="log-entry">Log cleared...</div>';
+    }
+
+    function getCheckedSiblings() {
+      const checkedNodes = $('.radix-tree-demo').radixTree('getChecked');
+      if (checkedNodes.length === 0) {
+        addLog('No nodes are currently checked', 'siblings');
+        return;
+      }
+
+      checkedNodes.forEach(checkedNode => {
+        const siblings = $('.radix-tree-demo').radixTree('getSiblings', checkedNode.id);
+        const siblingLabels = siblings.map(s => s.label).join(', ');
+        addLog(`Siblings of "${checkedNode.label}": ${siblingLabels || 'None'}`, 'siblings');
+        
+        // Log complete sibling objects
+        console.log(`Complete siblings of "${checkedNode.label}":`, siblings);
+      });
+    }
+
+    function testGetSiblingsAPI() {
+      const treeInstance = $('.radix-tree-demo');
+      
+      // Get all checked nodes to test with
+      const checkedNodes = treeInstance.radixTree('getChecked');
+      
+      if (checkedNodes.length === 0) {
+        addLog('No checked nodes found. Please check a node first.', 'siblings');
+        return;
+      }
+      
+      // Test with the first checked node
+      const testNode = checkedNodes[0];
+      addLog(`Testing getSiblings with node: "${testNode.label}" (ID: ${testNode.id})`, 'siblings');
+      
+      // Try to get siblings using the node ID
+      const siblings = treeInstance.radixTree('getSiblings', testNode.id);
+      
+      if (siblings.length > 0) {
+        const siblingLabels = siblings.map(s => s.label).join(', ');
+        addLog(`✅ Success! Siblings found: ${siblingLabels}`, 'siblings');
+        console.log('Siblings via API:', siblings);
+      } else {
+        addLog(`❌ No siblings found for "${testNode.label}"`, 'siblings');
+        
+        // Debug: show all available node IDs
+        const allNodes = treeInstance.radixTree('getData');
+        console.log('All tree data:', allNodes);
+        console.log('Test node ID:', testNode.id);
+        console.log('Test node full object:', testNode);
+      }
+    }
+
+    function testSetCheckedAPI() {
+      const treeInstance = $('.radix-tree-demo');
+      
+      // Get all checked nodes to test with
+      const checkedNodes = treeInstance.radixTree('getChecked');
+      
+      if (checkedNodes.length === 0) {
+        addLog('No checked nodes found. Please check a node first.', 'siblings');
+        return;
+      }
+      
+      // Test with the first checked node
+      const testNode = checkedNodes[0];
+      addLog(`Testing setChecked with node: "${testNode.label}" (ID: ${testNode.id})`, 'siblings');
+      
+      try {
+        // Try to uncheck the node using setChecked
+        treeInstance.radixTree('setChecked', testNode.id, false);
+        addLog(`✅ Successfully unchecked "${testNode.label}" using setChecked API`, 'siblings');
+        
+        // Verify the change
+        setTimeout(() => {
+          const updatedCheckedNodes = treeInstance.radixTree('getChecked');
+          const stillChecked = updatedCheckedNodes.find(n => n.id === testNode.id);
+          if (stillChecked) {
+            addLog(`❌ Node "${testNode.label}" is still checked after setChecked(false)`, 'siblings');
+          } else {
+            addLog(`✅ Verified: "${testNode.label}" is now unchecked`, 'siblings');
+          }
+        }, 100);
+        
+      } catch (error) {
+        addLog(`❌ Error in setChecked API: ${error.message}`, 'siblings');
+        console.error('setChecked API error:', error);
+      }
+    }
+
+    $(document).ready(function() {
+      $('.radix-tree-demo').radixTree({
+        data: demoData,
+        onExpand: function(node, details, siblings) {
+          const siblingLabels = siblings.map(s => s.label).join(', ');
+          addLog(`EXPAND: "${node.label}" - Siblings: ${siblingLabels || 'None'}`, 'expand');
+          console.log('🔽 EXPAND Event with Siblings:', {
+            node: node.label,
+            siblings: siblings.map(s => s.label),
+            siblingCount: siblings.length
+          });
+        },
+        onCollapse: function(node, details, siblings) {
+          const siblingLabels = siblings.map(s => s.label).join(', ');
+          addLog(`COLLAPSE: "${node.label}" - Siblings: ${siblingLabels || 'None'}`, 'collapse');
+          console.log('🔼 COLLAPSE Event with Siblings:', {
+            node: node.label,
+            siblings: siblings.map(s => s.label),
+            siblingCount: siblings.length
+          });
+        },
+        onCheck: function(node, checkbox, siblings) {
+          const action = checkbox.checked ? 'checked' : 'unchecked';
+          const siblingLabels = siblings.map(s => s.label).join(', ');
+          
+          addLog(`${action}: "${node.label}"`, 'check');
+          addLog(`Siblings: ${siblingLabels || 'None'}`, 'siblings');
+          
+          // Log complete node information
+          console.log('=== NODE CHANGE EVENT ===');
+          console.log('Changed node (complete):', {
+            id: node.id,
+            _radixId: node._radixId,
+            label: node.label,
+            checked: node.checked,
+            open: node.open,
+            indeterminate: node.indeterminate,
+            disabled: node.disabled,
+            lazy: node.lazy,
+            children: node.children,
+            _radixParentId: node._radixParentId,
+            // Include any other custom properties
+            ...node
+          });
+          
+          console.log('Checkbox state:', {
+            checked: checkbox.checked,
+            indeterminate: checkbox.indeterminate,
+            disabled: checkbox.disabled
+          });
+          
+          console.log('Siblings (complete objects):', siblings.map(sibling => ({
+            id: sibling.id,
+            _radixId: sibling._radixId,
+            label: sibling.label,
+            checked: sibling.checked,
+            open: sibling.open,
+            indeterminate: sibling.indeterminate,
+            disabled: sibling.disabled,
+            lazy: sibling.lazy,
+            children: sibling.children,
+            _radixParentId: sibling._radixParentId,
+            // Include any other custom properties
+            ...sibling
+          })));
+          
+          console.log('Sibling count:', siblings.length);
+          console.log('=== END NODE CHANGE EVENT ===');
+        },
+        onClick: function(node) {
+          addLog(`Clicked: "${node.label}"`, 'check');
+          console.log('Clicked node (complete):', {
+            id: node.id,
+            _radixId: node._radixId,
+            label: node.label,
+            checked: node.checked,
+            open: node.open,
+            indeterminate: node.indeterminate,
+            disabled: node.disabled,
+            lazy: node.lazy,
+            children: node.children,
+            _radixParentId: node._radixParentId,
+            // Include any other custom properties
+            ...node
+          });
+        }
+      });
+
+      addLog('Tree initialized with sibling detection enabled', 'check');
+    });
+  </script>
+</body>
+
+</html> 

@@ -5,7 +5,7 @@
 [![GitHub stars](https://img.shields.io/github/stars/dxmari/jquery-radix-tree?style=social)](https://github.com/dxmari/jquery-radix-tree)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
-A powerful, modern, and highly interactive tree view component for jQuery, supporting deep nesting, lazy loading, checkboxes, badges, tags, keyboard navigation, infinite scroll, and more.  
+A powerful, modern, and highly interactive tree view component for jQuery, supporting deep nesting, lazy loading, checkboxes, badges, tags, keyboard navigation, infinite scroll, sibling detection, and more.  
 Perfect for dashboards, data explorers, and any UI that needs a dynamic, hierarchical structure.
 
 ---
@@ -21,6 +21,8 @@ Perfect for dashboards, data explorers, and any UI that needs a dynamic, hierarc
   - [Badges & Tags](#badges--tags)
   - [Infinite Scroll](#infinite-scroll)
   - [Disabled Nodes](#disabled-nodes)
+  - [Sibling Detection](#sibling-detection)
+  - [Enhanced Events](#enhanced-events)
   - [Command API](#command-api)
   - [Dynamic Class Names](#dynamic-class-names)
   - [Lazy Load Delay & Pagination Size](#lazy-load-delay--pagination-size)
@@ -48,8 +50,10 @@ Perfect for dashboards, data explorers, and any UI that needs a dynamic, hierarc
 - **Badges & Tags:** Display badges (numbers, labels) and tags on any node.
 - **Infinite Scroll:** For large datasets, load more nodes as you scroll.
 - **Disabled Nodes:** Disable any node or entire subtrees.
+- **Sibling Detection:** Get sibling nodes for any node with complete properties.
+- **Enhanced Events:** All events now include sibling information and complete node properties.
 - **Keyboard Navigation:** Full arrow-key and space/enter navigation.
-- **Custom Callbacks:** onExpand, onCollapse, onClick, onCheck, and lazyLoad.
+- **Custom Callbacks:** onExpand, onCollapse, onClick, onCheck, and lazyLoad with sibling data.
 - **Dynamic Data:** Update the tree data or structure at runtime.
 - **Modern UI:** SVG-based checkboxes, beautiful lines, and smooth focus/hover states.
 - **Accessible:** ARIA-friendly, focusable, and keyboard-usable.
@@ -61,6 +65,12 @@ Perfect for dashboards, data explorers, and any UI that needs a dynamic, hierarc
 
 Open `index.html` in your browser to see the tree in action.  
 You can also experiment with different data and features by editing `index.js`.
+
+**Additional Demo Pages:**
+- **Sibling Demo:** `example/sibling-demo.html` - Test sibling detection and complete node properties
+- **Expand/Collapse Test:** `example/expand-collapse-test.html` - Test enhanced expand/collapse events
+- **Employee Directory:** `example/lazyload-example2.html` - Multi-level org structure with lazy loading
+- **GitHub Integration:** `example/lazyload-github.html` - Real API integration example
 
 ---
 
@@ -198,42 +208,78 @@ const demoData = [
     tags: ['infinite', 'files']
   }
 ];
+```
 
-function infiniteLazyLoad(node, done, opts, delay) {
-  const total = 100;
-  const page = opts && opts.page ? opts.page : 1;
-  const pageSize = opts && opts.pageSize ? opts.pageSize : 20; // Controlled by pageSize option
-  const start = (page - 1) * pageSize;
-  const end = Math.min(start + pageSize, total);
-  const children = [];
-  for (let i = start; i < end; i++) {
-    children.push({
-      label: 'File ' + (i + 1),
-      badge: (i % 2 === 0) ? 'even' : 'odd',
-      tags: (i % 10 === 0) ? ['milestone'] : []
-    });
-  }
-  setTimeout(() => {
-    done(children, end < total); // hasMore = true if more pages
-  }, delay); // Use the dynamic delay
+### Sibling Detection
+
+Get sibling nodes (nodes that share the same parent) for any node:
+
+```js
+// In event callbacks
+onCheck: function(node, checkbox, siblings) {
+  console.log('Node changed:', node.label);
+  console.log('Siblings:', siblings.map(s => s.label));
+  console.log('Complete sibling objects:', siblings);
 }
 
-// Example 1: Small pageSize, default threshold (pagination enabled for 5)
-$('.radix-tree-small').radixTree({
-  data: demoData,
-  lazyLoad: infiniteLazyLoad,
-  pageSize: 5,         // Pagination enabled for 5 (default threshold is 5)
-  lazyLoadDelay: 800
-});
+// Programmatically
+const siblings = $('.radix-tree').radixTree('getSiblings', nodeId);
+console.log('Siblings:', siblings);
+```
 
-// Example 2: Custom threshold (pagination only for pageSize >= 10)
-$('.radix-tree-large').radixTree({
-  data: demoData,
-  lazyLoad: infiniteLazyLoad,
-  pageSize: 5,         // Pagination NOT enabled for 5 (threshold is 10)
-  paginateThreshold: 10,
-  lazyLoadDelay: 800
+### Enhanced Events
+
+All events now provide complete node information and sibling data:
+
+```js
+$('.radix-tree').radixTree({
+  onExpand: function(node, details, siblings) {
+    console.log('Node expanded:', {
+      node: node.label,
+      id: node.id,
+      checked: node.checked,
+      open: node.open,
+      siblings: siblings.map(s => s.label)
+    });
+  },
+  onCollapse: function(node, details, siblings) {
+    console.log('Node collapsed:', {
+      node: node.label,
+      siblings: siblings.map(s => s.label)
+    });
+  },
+  onCheck: function(node, checkbox, siblings) {
+    console.log('Node checked:', {
+      node: node.label,
+      checked: checkbox.checked,
+      siblings: siblings.map(s => s.label)
+    });
+  }
 });
+```
+
+### Complete Node Properties
+
+Access all node properties including internal radix tree properties:
+
+```js
+onCheck: function(node, checkbox, siblings) {
+  console.log('Complete node:', {
+    id: node.id,                    // Custom ID
+    _radixId: node._radixId,        // Internal radix ID
+    label: node.label,              // Display text
+    checked: node.checked,          // Checkbox state
+    open: node.open,                // Expansion state
+    indeterminate: node.indeterminate, // Indeterminate state
+    disabled: node.disabled,        // Disabled state
+    lazy: node.lazy,                // Lazy loading flag
+    children: node.children,        // Child nodes
+    _radixParentId: node._radixParentId, // Parent node ID
+    badge: node.badge,              // Badge text/number
+    tags: node.tags,                // Array of tags
+    // ... any other custom properties
+  });
+}
 ```
 
 ### Disabled Nodes
@@ -367,8 +413,12 @@ Interact with the tree after initialization:
 // Get all checked nodes
 const checked = $('.radix-tree').radixTree('getChecked');
 
-// Set a node as checked
-$('.radix-tree').radixTree('setChecked', nodeId, true);
+// Set a node as checked/unchecked
+$('.radix-tree').radixTree('setChecked', nodeId, true);   // Check
+$('.radix-tree').radixTree('setChecked', nodeId, false);  // Uncheck
+
+// Get sibling nodes of a specific node
+const siblings = $('.radix-tree').radixTree('getSiblings', nodeId);
 
 // Expand/collapse nodes programmatically
 $('.radix-tree').radixTree('expand', nodeId);
@@ -378,6 +428,8 @@ $('.radix-tree').radixTree('collapse', nodeId);
 const currentData = $('.radix-tree').radixTree('getData');
 $('.radix-tree').radixTree('setData', newData);
 ```
+
+**Note:** Use `node._radixId` (from event callbacks) or `checkedNode.id` (from `getChecked()`) for the `nodeId` parameter in commands.
 
 ---
 
@@ -400,6 +452,14 @@ Each node is an object with these properties:
 - `pageSize` (number): Items per page for infinite scroll/lazy load (plugin option, not per node).
 - `paginateThreshold` (number, optional): Minimum pageSize to enable pagination/scroll. If not provided, defaults to Math.min(10, pageSize).
 
+**Internal Properties (added by the plugin):**
+- `_radixId` (string): Internal radix tree ID for API commands.
+- `_radixParentId` (string): Parent node's internal ID.
+- `_lazyLoaded` (bool): Whether lazy children have been loaded.
+- `_loading` (bool): Whether lazy loading is in progress.
+- `_page` (number): Current page for infinite scroll.
+- `hasMore` (bool): Whether more pages are available.
+
 **Example:**
 ```js
 {
@@ -415,7 +475,14 @@ Each node is an object with these properties:
   className: 'custom-class',
   lazyLoadDelay: 1000,
   pageSize: 20,
-  paginateThreshold: 5
+  paginateThreshold: 5,
+  // Internal properties (added by plugin)
+  _radixId: 'radix-tree-checkbox-frontend',
+  _radixParentId: 'radix-tree-checkbox-projects',
+  _lazyLoaded: false,
+  _loading: false,
+  _page: 1,
+  hasMore: true
 }
 ```
 
@@ -524,25 +591,78 @@ You can override any style in `style.css` or add your own classes via the `class
 
 ## Events & Callbacks
 
-You can hook into tree events for custom logic:
+You can hook into tree events for custom logic. All events now include sibling information and complete node properties:
 
 ```js
 $('.radix-tree').radixTree({
   data,
-  onExpand: (node, detailsElem) => {
+  onExpand: (node, detailsElem, siblings) => {
     console.log('Expanded:', node.label);
+    console.log('Siblings:', siblings.map(s => s.label));
+    console.log('Complete node:', {
+      id: node.id,
+      _radixId: node._radixId,
+      label: node.label,
+      checked: node.checked,
+      open: node.open,
+      indeterminate: node.indeterminate,
+      disabled: node.disabled,
+      lazy: node.lazy,
+      children: node.children,
+      _radixParentId: node._radixParentId,
+      badge: node.badge,
+      tags: node.tags,
+    });
   },
-  onCollapse: (node, detailsElem) => {
+  onCollapse: (node, detailsElem, siblings) => {
     console.log('Collapsed:', node.label);
+    console.log('Siblings:', siblings.map(s => s.label));
   },
   onClick: (node, elem) => {
     alert('Clicked: ' + node.label);
   },
-  onCheck: (node, checkboxElem) => {
+  onCheck: (node, checkboxElem, siblings) => {
     console.log('Checked:', node.label, checkboxElem.checked);
+    console.log('Siblings:', siblings.map(s => s.label));
+    console.log('Complete node:', {
+      id: node.id,
+      _radixId: node._radixId,
+      label: node.label,
+      checked: node.checked,
+      open: node.open,
+      indeterminate: node.indeterminate,
+      disabled: node.disabled,
+      lazy: node.lazy,
+      children: node.children,
+      _radixParentId: node._radixParentId,
+      badge: node.badge,
+      tags: node.tags,
+    });
   }
 });
 ```
+
+**Event Parameters:**
+- **`node`** - The node object with all properties (including internal radix properties)
+- **`detailsElem`** - The HTML details element (for expand/collapse events)
+- **`checkboxElem`** - The HTML checkbox element (for check events)
+- **`elem`** - The clicked element (for click events)
+- **`siblings`** - Array of sibling nodes (nodes that share the same parent)
+
+**Available Node Properties:**
+- `id` - Custom node ID
+- `_radixId` - Internal radix tree ID (use for API commands)
+- `label` - Display text
+- `checked` - Checkbox state
+- `open` - Expansion state
+- `indeterminate` - Indeterminate state
+- `disabled` - Disabled state
+- `lazy` - Lazy loading flag
+- `children` - Child nodes array
+- `_radixParentId` - Parent node's internal ID
+- `badge` - Badge text/number
+- `tags` - Array of tags
+- Plus any custom properties you add to your nodes
 
 ---
 
@@ -567,7 +687,7 @@ For questions, open an issue or start a discussion.
 
 ---
 
-## Who's Using Radix Tree?
+<!-- ## Who's Using Radix Tree?
 
 Here are some awesome projects and companies using Radix Tree:
 
@@ -580,15 +700,15 @@ Here are some awesome projects and companies using Radix Tree:
 > Are you using Radix Tree? [Open a PR](https://github.com/dxmari/jquery-radix-tree/pulls) or [let us know!](mailto:maaricse8@gmail.com)
 > We'd love to feature your project here!
 
----
+--- -->
 
 **Enjoy your new interactive tree!**  
 For questions or contributions, open an issue or PR on GitHub.
 
-> “Integrating the Radix Tree jQuery Plugin into our platform was seamless and impactful. Its flexibility and performance allowed us to build complex, interactive data views with minimal effort. The plugin’s robust feature set and excellent documentation made it easy for our team to customize and scale as our needs evolved. Highly recommended for any engineering team looking for a reliable tree component.”
+> "Integrating the Radix Tree jQuery Plugin into our platform was seamless and impactful. Its flexibility and performance allowed us to build complex, interactive data views with minimal effort. The plugin's robust feature set and excellent documentation made it easy for our team to customize and scale as our needs evolved. Highly recommended for any engineering team looking for a reliable tree component."
 >
 > — [CultureMonkey](https://www.culturemonkey.io/), Siva Samraj, Director Of Engineering
 
-> “Radix Tree has been a game-changer for our UI development. The plugin’s intuitive API and responsive design enabled us to deliver a polished, user-friendly experience to our clients. We especially appreciate the attention to detail in handling large datasets and multiple instances. Support from the maintainers has been prompt and helpful. It’s now our go-to solution for tree structures.”
+> "Radix Tree has been a game-changer for our UI development. The plugin's intuitive API and responsive design enabled us to deliver a polished, user-friendly experience to our clients. We especially appreciate the attention to detail in handling large datasets and multiple instances. Support from the maintainers has been prompt and helpful. It's now our go-to solution for tree structures."
 >
 > — [effy](https://www.effy.co.in/), Gopi, Engineering Manager

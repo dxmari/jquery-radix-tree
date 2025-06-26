@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Expand/Collapse Event Test - RadixTree</title>
+  <script src="https://code.jquery.com/jquery-3.7.1.slim.min.js"
+    integrity="sha256-kmHvs0B+OpCW5GVHUNjv9rOmY0IvSIRcf7zGUDTDQM8=" crossorigin="anonymous"></script>
+  <script src="../tree.js"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f8f9fa;
+    }
+
+    .test-container {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      color: #2c3e50;
+      margin-bottom: 20px;
+    }
+
+    .info-panel {
+      background: #e3f2fd;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      border-left: 4px solid #2196f3;
+    }
+
+    .log-panel {
+      background: #f5f5f5;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 20px;
+      max-height: 300px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+    }
+
+    .log-entry {
+      margin-bottom: 8px;
+      padding: 5px;
+      border-radius: 4px;
+    }
+
+    .log-expand {
+      background: #e8f5e8;
+      border-left: 3px solid #4caf50;
+    }
+
+    .log-collapse {
+      background: #ffebee;
+      border-left: 3px solid #f44336;
+    }
+
+    .log-click {
+      background: #fff3e0;
+      border-left: 3px solid #ff9800;
+    }
+
+    .controls {
+      margin: 20px 0;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      background: #2196f3;
+      color: white;
+      transition: background 0.2s;
+    }
+
+    .btn:hover {
+      background: #1976d2;
+    }
+
+    .btn.secondary {
+      background: #6c757d;
+    }
+
+    .btn.secondary:hover {
+      background: #545b62;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="test-container">
+    <h1>🔍 Expand/Collapse Event Test</h1>
+    
+    <div class="info-panel">
+      <strong>Test Instructions:</strong>
+      <ul>
+        <li>Click on the expand/collapse arrows to test events</li>
+        <li>Expand events should fire when opening nodes</li>
+        <li>Collapse events should fire when closing nodes</li>
+        <li>Both events now include sibling node information</li>
+        <li>Check the log panel and browser console for event details</li>
+      </ul>
+    </div>
+
+    <div class="controls">
+      <button class="btn" onclick="clearLog()">Clear Log</button>
+      <button class="btn secondary" onclick="expandAll()">Expand All</button>
+      <button class="btn secondary" onclick="collapseAll()">Collapse All</button>
+    </div>
+
+    <div class="radix-tree-test"></div>
+    
+    <div class="log-panel" id="logPanel">
+      <div class="log-entry">Ready to test expand/collapse events...</div>
+    </div>
+  </div>
+
+  <script>
+    // Test data with multiple levels
+    const testData = [
+      {
+        id: 'level1-1',
+        label: 'Level 1 - Node 1',
+        open: false,
+        children: [
+          {
+            id: 'level2-1',
+            label: 'Level 2 - Node 1',
+            open: false,
+            children: [
+              { id: 'level3-1', label: 'Level 3 - Node 1' },
+              { id: 'level3-2', label: 'Level 3 - Node 2' }
+            ]
+          },
+          {
+            id: 'level2-2',
+            label: 'Level 2 - Node 2',
+            open: false,
+            children: [
+              { id: 'level3-3', label: 'Level 3 - Node 3' }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'level1-2',
+        label: 'Level 1 - Node 2',
+        open: false,
+        children: [
+          { id: 'level2-3', label: 'Level 2 - Node 3' },
+          { id: 'level2-4', label: 'Level 2 - Node 4' }
+        ]
+      }
+    ];
+
+    function addLog(message, type = 'click') {
+      const logPanel = document.getElementById('logPanel');
+      const logEntry = document.createElement('div');
+      logEntry.className = `log-entry log-${type}`;
+      logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+      logPanel.appendChild(logEntry);
+      logPanel.scrollTop = logPanel.scrollHeight;
+    }
+
+    function clearLog() {
+      document.getElementById('logPanel').innerHTML = '<div class="log-entry">Log cleared...</div>';
+    }
+
+    function expandAll() {
+      $('.radix-tree-test').radixTree('expand', 'level1-1');
+      $('.radix-tree-test').radixTree('expand', 'level1-2');
+    }
+
+    function collapseAll() {
+      $('.radix-tree-test').radixTree('collapse', 'level1-1');
+      $('.radix-tree-test').radixTree('collapse', 'level1-2');
+    }
+
+    $(document).ready(function() {
+      $('.radix-tree-test').radixTree({
+        data: testData,
+        onExpand: function(node, details, siblings) {
+          addLog(`EXPAND: "${node.label}" (ID: ${node.id})`, 'expand');
+          console.log('🔽 EXPAND Event:', {
+            node: {
+              id: node.id,
+              _radixId: node._radixId,
+              label: node.label,
+              open: node.open,
+              checked: node.checked,
+              indeterminate: node.indeterminate,
+              disabled: node.disabled,
+              lazy: node.lazy,
+              children: node.children,
+              _radixParentId: node._radixParentId,
+              // Include any other custom properties
+              ...node
+            },
+            details: details,
+            siblings: siblings.map(sibling => ({
+              id: sibling.id,
+              _radixId: sibling._radixId,
+              label: sibling.label,
+              checked: sibling.checked,
+              open: sibling.open,
+              indeterminate: sibling.indeterminate,
+              disabled: sibling.disabled,
+              lazy: sibling.lazy,
+              children: sibling.children,
+              _radixParentId: sibling._radixParentId,
+              // Include any other custom properties
+              ...sibling
+            })),
+            siblingCount: siblings.length
+          });
+        },
+        onCollapse: function(node, details, siblings) {
+          addLog(`COLLAPSE: "${node.label}" (ID: ${node.id})`, 'collapse');
+          console.log('🔼 COLLAPSE Event:', {
+            node: {
+              id: node.id,
+              _radixId: node._radixId,
+              label: node.label,
+              open: node.open,
+              checked: node.checked,
+              indeterminate: node.indeterminate,
+              disabled: node.disabled,
+              lazy: node.lazy,
+              children: node.children,
+              _radixParentId: node._radixParentId,
+              // Include any other custom properties
+              ...node
+            },
+            details: details,
+            siblings: siblings.map(sibling => ({
+              id: sibling.id,
+              _radixId: sibling._radixId,
+              label: sibling.label,
+              checked: sibling.checked,
+              open: sibling.open,
+              indeterminate: sibling.indeterminate,
+              disabled: sibling.disabled,
+              lazy: sibling.lazy,
+              children: sibling.children,
+              _radixParentId: sibling._radixParentId,
+              // Include any other custom properties
+              ...sibling
+            })),
+            siblingCount: siblings.length
+          });
+        },
+        onClick: function(node) {
+          addLog(`CLICK: "${node.label}"`, 'click');
+          console.log('🖱️ CLICK Event:', {
+            node: node.label,
+            id: node.id
+          });
+        }
+      });
+
+      addLog('Tree initialized - start testing expand/collapse events', 'click');
+    });
+  </script>
+</body>
+
+</html> 
