@@ -584,6 +584,12 @@ const openChecked = $('.radix-tree').radixTree('getOpenChecked');
 // Get only checked parent nodes that are currently closed
 const closedChecked = $('.radix-tree').radixTree('getClosedChecked');
 
+// Get all nodes that are visible in the UI (regardless of open/closed state)
+const visibleNodes = $('.radix-tree').radixTree('getVisibleNodes');
+
+// Get all checked nodes that are visible in the UI
+const visibleCheckedNodes = $('.radix-tree').radixTree('getVisibleCheckedNodes');
+
 // Set a node as checked/unchecked
 $('.radix-tree').radixTree('setChecked', nodeId, true);   // Check
 $('.radix-tree').radixTree('setChecked', nodeId, false);  // Uncheck

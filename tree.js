@@ -1095,15 +1095,16 @@
           // Rebuild idNodeMap with current settings to ensure IDs match
           const currentIdNodeMap3 = buildIdNodeMap(settings.data, [], {}, null, idPrefix, checkboxIdCounter);
           
-          function collectClosedChecked(nodes) {
+          function collectClosedChecked(nodes, parentOpen = true) {
             nodes.forEach(node => {
               // Only include checked nodes that are closed (have children but are collapsed)
-              if (node.checked && !node.open && node.children && node.children.length > 0) {
+              // AND are visible in the UI (parent is open)
+              if (node.checked && !node.open && node.children && node.children.length > 0 && parentOpen) {
                 closedChecked.push({ id: node._radixId, label: node.label, node });
               }
-              // Continue traversing children if node is open
-              if (node.open && node.children) {
-                collectClosedChecked(node.children);
+              // Only traverse children if the current node is open (so children would be visible)
+              if (node.open && node.children && node.children.length > 0) {
+                collectClosedChecked(node.children, true);
               }
             });
           }
@@ -1207,6 +1208,44 @@
             return getSiblingNodes(node, currentIdNodeMap);
           }
           return [];
+        }
+        case 'getVisibleNodes': {
+          // Return array of all nodes that are visible in the UI
+          const visibleNodes = [];
+          
+          function collectVisibleNodes(nodes, parentOpen = true) {
+            nodes.forEach(node => {
+              // Include node if it's visible (parent is open)
+              if (parentOpen) {
+                visibleNodes.push({ id: node._radixId, label: node.label, node });
+              }
+              // Continue traversing children if the current node is open
+              if (node.open && node.children && node.children.length > 0) {
+                collectVisibleNodes(node.children, true);
+              }
+            });
+          }
+          collectVisibleNodes(settings.data);
+          return visibleNodes;
+        }
+        case 'getVisibleCheckedNodes': {
+          // Return array of all checked nodes that are visible in the UI
+          const visibleCheckedNodes = [];
+          
+          function collectVisibleCheckedNodes(nodes, parentOpen = true) {
+            nodes.forEach(node => {
+              // Include checked node if it's visible (parent is open)
+              if (parentOpen && node.checked) {
+                visibleCheckedNodes.push({ id: node._radixId, label: node.label, node });
+              }
+              // Continue traversing children if the current node is open
+              if (node.open && node.children && node.children.length > 0) {
+                collectVisibleCheckedNodes(node.children, true);
+              }
+            });
+          }
+          collectVisibleCheckedNodes(settings.data);
+          return visibleCheckedNodes;
         }
       }
       return;

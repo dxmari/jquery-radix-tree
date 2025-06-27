@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>getClosedChecked Fix Test</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="tree.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-title {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+        .test-instructions {
+            background: #e8f4fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            border-left: 4px solid #3498db;
+        }
+        .tree-container {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+            background: #fafafa;
+        }
+        .result-panel {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 5px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+        }
+        .result-item {
+            margin: 5px 0;
+            padding: 5px;
+            background: #e9ecef;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            color: #0c5460;
+        }
+        .controls {
+            margin: 15px 0;
+            padding: 15px;
+            background: #fff3cd;
+            border-radius: 5px;
+            border-left: 4px solid #ffc107;
+        }
+        button {
+            margin: 5px;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 getClosedChecked Fix Test</h1>
+    
+    <div class="test-container">
+        <h2 class="test-title">Testing getClosedChecked for Child Level Nodes</h2>
+        <div class="test-instructions">
+            <strong>Test Scenario:</strong> 
+            <ul>
+                <li>Root level: "Documents" (open, checked)</li>
+                <li>Level 1: "Work" (closed, checked) - should be found ✅ (parent is open)</li>
+                <li>Level 2: "Projects" (closed, checked) - should NOT be found ❌ (parent is closed)</li>
+                <li>Level 3: "Frontend" (closed, checked) - should NOT be found ❌ (parent is closed)</li>
+                <li>Level 1: "Personal" (open, checked) - should NOT be found ❌ (it's open)</li>
+                <li>Level 2: "Photos" (closed, checked) - should be found ✅ (parent is open)</li>
+            </ul>
+            <strong>New Behavior:</strong> Only returns closed checked nodes that are visible in the UI (whose parents are open).
+        </div>
+        <div class="tree-container" id="test-tree"></div>
+        
+        <div class="controls">
+            <button onclick="testGetClosedChecked()">Test getClosedChecked</button>
+            <button onclick="testGetOpenChecked()">Test getOpenChecked</button>
+            <button onclick="testGetChecked()">Test getChecked</button>
+            <button onclick="testGetVisibleNodes()">Test getVisibleNodes</button>
+            <button onclick="testGetVisibleCheckedNodes()">Test getVisibleCheckedNodes</button>
+            <button onclick="expandAll()">Expand All</button>
+            <button onclick="collapseAll()">Collapse All</button>
+        </div>
+        
+        <div class="result-panel">
+            <h4>Test Results:</h4>
+            <div id="test-results">Click a test button to see results...</div>
+        </div>
+    </div>
+
+    <script>
+        const testData = [
+            {
+                label: '📁 Documents',
+                open: true,
+                checked: true,
+                children: [
+                    {
+                        label: '📄 Work',
+                        open: false, // Closed parent
+                        checked: true,
+                        children: [
+                            {
+                                label: '📋 Projects',
+                                open: false, // Closed child
+                                checked: true,
+                                children: [
+                                    {
+                                        label: '💻 Frontend',
+                                        open: false, // Closed grandchild
+                                        checked: true,
+                                        children: [
+                                            { label: 'React', checked: false },
+                                            { label: 'Vue', checked: false }
+                                        ]
+                                    },
+                                    {
+                                        label: '🔧 Backend',
+                                        open: false,
+                                        checked: false,
+                                        children: [
+                                            { label: 'Node.js', checked: false },
+                                            { label: 'Python', checked: false }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                label: '📧 Emails',
+                                open: false,
+                                checked: false,
+                                children: [
+                                    { label: 'Inbox', checked: false },
+                                    { label: 'Sent', checked: false }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        label: '🏠 Personal',
+                        open: true, // Open parent
+                        checked: true,
+                        children: [
+                            {
+                                label: '📸 Photos',
+                                open: false, // Closed child of open parent
+                                checked: true,
+                                children: [
+                                    { label: 'Vacation', checked: false },
+                                    { label: 'Family', checked: false }
+                                ]
+                            },
+                            {
+                                label: '📚 Books',
+                                open: false,
+                                checked: false,
+                                children: [
+                                    { label: 'Fiction', checked: false },
+                                    { label: 'Non-fiction', checked: false }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        // Initialize the tree
+        const $tree = $('#test-tree').radixTree({
+            data: testData,
+            onExpand: function(node, details, siblings) {
+                console.log('✅ Expanded:', node.label);
+            },
+            onCollapse: function(node, details, siblings) {
+                console.log('📁 Collapsed:', node.label);
+            },
+            onCheck: function(node, checkbox, siblings) {
+                console.log('☑️ Checked:', node.label, checkbox.checked);
+            }
+        });
+
+        function displayResults(title, results, expectedCount) {
+            const resultsDiv = $('#test-results');
+            resultsDiv.empty();
+            
+            resultsDiv.append(`<div class="result-item info"><strong>${title}</strong></div>`);
+            resultsDiv.append(`<div class="result-item info">Found ${results.length} items (Expected: ${expectedCount})</div>`);
+            
+            if (results.length === 0) {
+                resultsDiv.append('<div class="result-item error">❌ No items found</div>');
+            } else {
+                results.forEach(item => {
+                    const isClosed = !item.node.open;
+                    const hasChildren = item.node.children && item.node.children.length > 0;
+                    const status = isClosed && hasChildren ? '✅' : '⚠️';
+                    const statusClass = isClosed && hasChildren ? 'success' : 'error';
+                    
+                    resultsDiv.append(`
+                        <div class="result-item ${statusClass}">
+                            ${status} ${item.label} (ID: ${item.id})
+                            <br>→ Closed: ${isClosed}, Has Children: ${hasChildren}
+                        </div>
+                    `);
+                });
+            }
+        }
+
+        function testGetClosedChecked() {
+            try {
+                const closedChecked = $tree.radixTree('getClosedChecked');
+                console.log('🔍 getClosedChecked results:', closedChecked);
+                
+                // Expected: Work, Photos (2 items) - only visible closed nodes
+                displayResults('getClosedChecked Results', closedChecked, 2);
+                
+                // Verify each result is actually closed, has children, and parent is open
+                const validResults = closedChecked.filter(item => {
+                    const isClosed = !item.node.open;
+                    const hasChildren = item.node.children && item.node.children.length > 0;
+                    
+                    // Check if parent is open (node would be visible in UI)
+                    const settings = $('#test-tree').data('radixTreeSettings');
+                    const idPrefix = $('#test-tree').data('radixTreeIdPrefix');
+                    const checkboxIdCounter = { val: 0 };
+                    const idNodeMap = buildIdNodeMap(settings.data, [], {}, null, idPrefix, checkboxIdCounter);
+                    
+                    const parent = item.node._radixParentId ? idNodeMap[item.node._radixParentId] : null;
+                    const parentIsOpen = !parent || parent.open;
+                    
+                    return isClosed && hasChildren && parentIsOpen;
+                });
+                
+                if (validResults.length === closedChecked.length) {
+                    $('#test-results').append('<div class="result-item success">✅ All results are valid visible closed nodes!</div>');
+                } else {
+                    $('#test-results').append('<div class="result-item error">❌ Some results are not valid visible closed nodes!</div>');
+                }
+                
+            } catch (error) {
+                $('#test-results').html(`<div class="result-item error">❌ Error: ${error.message}</div>`);
+            }
+        }
+
+        function testGetOpenChecked() {
+            try {
+                const openChecked = $tree.radixTree('getOpenChecked');
+                console.log('🔍 getOpenChecked results:', openChecked);
+                
+                // Expected: Documents, Personal (2 items)
+                displayResults('getOpenChecked Results', openChecked, 2);
+                
+            } catch (error) {
+                $('#test-results').html(`<div class="result-item error">❌ Error: ${error.message}</div>`);
+            }
+        }
+
+        function testGetChecked() {
+            try {
+                const checked = $tree.radixTree('getChecked');
+                console.log('🔍 getChecked results:', checked);
+                
+                // Expected: All checked nodes (6 items)
+                displayResults('getChecked Results', checked, 6);
+                
+            } catch (error) {
+                $('#test-results').html(`<div class="result-item error">❌ Error: ${error.message}</div>`);
+            }
+        }
+
+        function testGetVisibleNodes() {
+            try {
+                const visibleNodes = $tree.radixTree('getVisibleNodes');
+                console.log('🔍 getVisibleNodes results:', visibleNodes);
+                
+                // Expected: All visible nodes (Documents, Work, Personal, Photos, Books, Projects, Emails, Frontend, Backend, React, Vue, Inbox, Sent, Vacation, Family, Fiction, Non-fiction)
+                displayResults('getVisibleNodes Results', visibleNodes, 17);
+                
+                // Show detailed visibility information
+                const resultsDiv = $('#test-results');
+                resultsDiv.append('<div class="result-item info"><strong>Visibility Details:</strong></div>');
+                
+                visibleNodes.forEach(item => {
+                    const isOpen = item.node.open;
+                    const hasChildren = item.node.children && item.node.children.length > 0;
+                    const isChecked = item.node.checked;
+                    const status = isOpen ? '📂' : (hasChildren ? '📁' : '📄');
+                    const statusClass = isOpen ? 'success' : (hasChildren ? 'info' : '');
+                    
+                    resultsDiv.append(`
+                        <div class="result-item ${statusClass}">
+                            ${status} ${item.label}
+                            <br>→ Open: ${isOpen}, Has Children: ${hasChildren}, Checked: ${isChecked}
+                        </div>
+                    `);
+                });
+                
+                // Verify all returned nodes are actually visible
+                const settings = $('#test-tree').data('radixTreeSettings');
+                const idPrefix = $('#test-tree').data('radixTreeIdPrefix');
+                const checkboxIdCounter = { val: 0 };
+                const idNodeMap = buildIdNodeMap(settings.data, [], {}, null, idPrefix, checkboxIdCounter);
+                
+                const allVisible = visibleNodes.every(item => {
+                    const parent = item.node._radixParentId ? idNodeMap[item.node._radixParentId] : null;
+                    return !parent || parent.open;
+                });
+                
+                if (allVisible) {
+                    resultsDiv.append('<div class="result-item success">✅ All returned nodes are visible in the UI!</div>');
+                } else {
+                    resultsDiv.append('<div class="result-item error">❌ Some returned nodes are not visible!</div>');
+                }
+                
+            } catch (error) {
+                $('#test-results').html(`<div class="result-item error">❌ Error: ${error.message}</div>`);
+            }
+        }
+
+        function testGetVisibleCheckedNodes() {
+            try {
+                const visibleCheckedNodes = $tree.radixTree('getVisibleCheckedNodes');
+                console.log('🔍 getVisibleCheckedNodes results:', visibleCheckedNodes);
+                
+                // Expected: All visible checked nodes (Work, Photos, Projects, Frontend, Backend, Fiction, Non-fiction)
+                displayResults('getVisibleCheckedNodes Results', visibleCheckedNodes, 7);
+                
+                // Show detailed visibility information
+                const resultsDiv = $('#test-results');
+                resultsDiv.append('<div class="result-item info"><strong>Visibility Details:</strong></div>');
+                
+                visibleCheckedNodes.forEach(item => {
+                    const isOpen = item.node.open;
+                    const hasChildren = item.node.children && item.node.children.length > 0;
+                    const isChecked = item.node.checked;
+                    const status = isOpen ? '📂' : (hasChildren ? '📁' : '📄');
+                    const statusClass = isOpen ? 'success' : (hasChildren ? 'info' : '');
+                    
+                    resultsDiv.append(`
+                        <div class="result-item ${statusClass}">
+                            ${status} ${item.label}
+                            <br>→ Open: ${isOpen}, Has Children: ${hasChildren}, Checked: ${isChecked}
+                        </div>
+                    `);
+                });
+                
+                // Verify all returned nodes are actually visible
+                const settings = $('#test-tree').data('radixTreeSettings');
+                const idPrefix = $('#test-tree').data('radixTreeIdPrefix');
+                const checkboxIdCounter = { val: 0 };
+                const idNodeMap = buildIdNodeMap(settings.data, [], {}, null, idPrefix, checkboxIdCounter);
+                
+                const allVisible = visibleCheckedNodes.every(item => {
+                    const parent = item.node._radixParentId ? idNodeMap[item.node._radixParentId] : null;
+                    return !parent || parent.open;
+                });
+                
+                if (allVisible) {
+                    resultsDiv.append('<div class="result-item success">✅ All returned nodes are visible in the UI!</div>');
+                } else {
+                    resultsDiv.append('<div class="result-item error">❌ Some returned nodes are not visible!</div>');
+                }
+                
+            } catch (error) {
+                $('#test-results').html(`<div class="result-item error">❌ Error: ${error.message}</div>`);
+            }
+        }
+
+        function expandAll() {
+            // Expand all nodes
+            const settings = $('#test-tree').data('radixTreeSettings');
+            function expandNodes(nodes) {
+                nodes.forEach(node => {
+                    if (node.children && node.children.length > 0) {
+                        node.open = true;
+                        expandNodes(node.children);
+                    }
+                });
+            }
+            expandNodes(settings.data);
+            
+            // Re-render
+            $('#test-tree').radixTree('setData', settings.data);
+            $('#test-results').html('<div class="result-item info">✅ All nodes expanded</div>');
+        }
+
+        function collapseAll() {
+            // Collapse all nodes
+            const settings = $('#test-tree').data('radixTreeSettings');
+            function collapseNodes(nodes) {
+                nodes.forEach(node => {
+                    if (node.children && node.children.length > 0) {
+                        node.open = false;
+                        collapseNodes(node.children);
+                    }
+                });
+            }
+            collapseNodes(settings.data);
+            
+            // Re-render
+            $('#test-tree').radixTree('setData', settings.data);
+            $('#test-results').html('<div class="result-item info">📁 All nodes collapsed</div>');
+        }
+
+        console.log('🚀 getClosedChecked Fix Test Loaded');
+        console.log('📋 Test data includes closed checked nodes at multiple levels');
+    </script>
+</body>
+</html> 
