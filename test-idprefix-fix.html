@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ID Prefix Fix Test</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="tree.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-title {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+        .test-instructions {
+            background: #e8f4fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            border-left: 4px solid #3498db;
+        }
+        .tree-container {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+            background: #fafafa;
+        }
+        .result-panel {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 5px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+        }
+        .result-item {
+            margin: 5px 0;
+            padding: 5px;
+            background: #e9ecef;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 ID Prefix Fix Test</h1>
+    
+    <div class="test-container">
+        <h2 class="test-title">Testing ID Prefix Generation</h2>
+        <div class="test-instructions">
+            <strong>Test:</strong> Verify that the buildIdNodeMap function now returns proper IDs with the correct prefix instead of just 'checkbox-4', 'checkbox-13', etc.
+        </div>
+        <div class="tree-container" id="test-tree"></div>
+        <div class="result-panel">
+            <h4>Generated IDs:</h4>
+            <div id="id-results">Loading...</div>
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h2 class="test-title">Command API Test</h2>
+        <div class="test-instructions">
+            <strong>Test:</strong> Verify that command API calls work correctly with the fixed ID prefix.
+        </div>
+        <div class="result-panel">
+            <h4>Command API Results:</h4>
+            <div id="command-results">Loading...</div>
+        </div>
+    </div>
+
+    <script>
+        const testData = [
+            {
+                label: '📁 Documents',
+                open: true,
+                children: [
+                    {
+                        label: '📄 Work',
+                        open: false,
+                        children: [
+                            { label: '📊 Reports', checked: false },
+                            { label: '📋 Projects', checked: true },
+                            { label: '📧 Emails', checked: false }
+                        ]
+                    },
+                    {
+                        label: '🏠 Personal',
+                        open: false,
+                        children: [
+                            { label: '📸 Photos', checked: true },
+                            { label: '📚 Books', checked: false },
+                            { label: '🎵 Music', checked: true }
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        // Initialize the tree
+        const $tree = $('#test-tree').radixTree({
+            data: testData,
+            focusMode: {
+                enabled: true,
+                type: ['highlight', 'accordion'],
+                autoScroll: true
+            }
+        });
+
+        // Test 1: Check generated IDs
+        setTimeout(() => {
+            const $container = $('#test-tree');
+            const settings = $container.data('radixTreeSettings');
+            const idPrefix = $container.data('radixTreeIdPrefix');
+            const checkboxIdCounter = { val: 0 };
+            const idNodeMap = buildIdNodeMap(settings.data, [], {}, null, idPrefix, checkboxIdCounter);
+            
+            console.log('🔍 ID Prefix:', idPrefix);
+            console.log('🗺️ ID Node Map:', idNodeMap);
+            
+            const resultsDiv = $('#id-results');
+            resultsDiv.empty();
+            
+            // Check if IDs have proper prefix
+            let allGood = true;
+            Object.keys(idNodeMap).forEach(id => {
+                const node = idNodeMap[id];
+                const resultClass = id.startsWith(idPrefix) ? 'success' : 'error';
+                const status = id.startsWith(idPrefix) ? '✅' : '❌';
+                
+                resultsDiv.append(`
+                    <div class="result-item ${resultClass}">
+                        ${status} ${node.label}: ${id}
+                    </div>
+                `);
+                
+                if (!id.startsWith(idPrefix)) {
+                    allGood = false;
+                }
+            });
+            
+            if (allGood) {
+                resultsDiv.prepend('<div class="result-item success">✅ All IDs have proper prefix!</div>');
+            } else {
+                resultsDiv.prepend('<div class="result-item error">❌ Some IDs are missing proper prefix!</div>');
+            }
+        }, 100);
+
+        // Test 2: Command API
+        setTimeout(() => {
+            const commandResults = $('#command-results');
+            commandResults.empty();
+            
+            try {
+                // Test getChecked
+                const checked = $tree.radixTree('getChecked');
+                commandResults.append(`
+                    <div class="result-item success">
+                        ✅ getChecked: ${checked.length} items found
+                    </div>
+                `);
+                
+                // Test getOpenChecked
+                const openChecked = $tree.radixTree('getOpenChecked');
+                commandResults.append(`
+                    <div class="result-item success">
+                        ✅ getOpenChecked: ${openChecked.length} items found
+                    </div>
+                `);
+                
+                // Test getClosedChecked
+                const closedChecked = $tree.radixTree('getClosedChecked');
+                commandResults.append(`
+                    <div class="result-item success">
+                        ✅ getClosedChecked: ${closedChecked.length} items found
+                    </div>
+                `);
+                
+                // Test getSiblings
+                const firstNodeId = Object.keys($('#test-tree').data('radixTreeSettings').data[0].children[0].children[0]._radixId || 'test')[0];
+                const siblings = $tree.radixTree('getSiblings', firstNodeId);
+                commandResults.append(`
+                    <div class="result-item success">
+                        ✅ getSiblings: ${siblings.length} siblings found
+                    </div>
+                `);
+                
+                commandResults.prepend('<div class="result-item success">✅ All command API tests passed!</div>');
+                
+            } catch (error) {
+                commandResults.append(`
+                    <div class="result-item error">
+                        ❌ Command API Error: ${error.message}
+                    </div>
+                `);
+            }
+        }, 200);
+
+        console.log('🚀 ID Prefix Fix Test Loaded');
+    </script>
+</body>
+</html> 

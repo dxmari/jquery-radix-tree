@@ -1346,3 +1346,7 @@ body.dark .faq-title {
 .radix-tree .tree li::after, .radix-tree .tree summary::before{
   margin-top: 2px !important;
 }
+
+.dark .radix-tree label:focus, .radix-tree label:hover {
+  background: #2d3a4a !important;
+}

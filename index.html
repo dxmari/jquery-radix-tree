@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="style.css">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <script src="https://code.jquery.com/jquery-3.7.1.slim.min.js" crossorigin="anonymous"></script>
-  <script src="tree.min.js"></script>
+  <script src="tree.js"></script>
   <script src="index.js"></script>
   <meta property="og:title" content="Radix Tree jQuery Plugin" />
   <meta property="og:description" content="A modern, interactive, deeply nestable tree view for jQuery dashboards." />
@@ -563,16 +563,27 @@ $('.radix-tree').radixTree({ data: [ /* ... */ ] });</code></pre></div>
             <pre class="code-block language-js" id="code-api">
               <code>
   const $tree = $('.radix-tree');
-  // Get checked nodes
+  
+  // Get all checked nodes
   const checked = $tree.radixTree('getChecked');
+  
+  // Get only checked parent nodes that are currently open
+  const openChecked = $tree.radixTree('getOpenChecked');
+  
+  // Get only checked parent nodes that are currently closed
+  const closedChecked = $tree.radixTree('getClosedChecked');
+  
   // Set checked state
   $tree.radixTree('setChecked', 'node-id', true);   // Check
   $tree.radixTree('setChecked', 'node-id', false);  // Uncheck
+  
   // Get sibling nodes
   const siblings = $tree.radixTree('getSiblings', 'node-id');
+  
   // Expand/collapse nodes
   $tree.radixTree('expand', 'node-id');
   $tree.radixTree('collapse', 'node-id');
+  
   // Get/set data
   const data = $tree.radixTree('getData');
   $tree.radixTree('setData', newData);
@@ -629,7 +640,22 @@ $('.radix-tree').radixTree({ data: [ /* ... */ ] });</code></pre></div>
           }
         ]
       }
-    ]
+    ],
+    focusMode: {
+      enabled: true,
+      type: ['highlight', 'accordion'], // Single mode: 'highlight' or multiple modes: ['highlight', 'accordion']
+      autoScroll: true,
+      highlightColor: '#4caf50',
+      animationDuration: 300,
+      preserveRoot: true,
+      maxOpenLevels: 2
+    },
+    onExpand: function(node, details, siblings) {
+      console.log('Focused on:', node.label);
+    },
+    onCollapse: function(node, details, siblings) {
+      console.log('Collapsed:', node.label);
+    }
   });
               </code>
             </pre>
@@ -740,6 +766,25 @@ $('.radix-tree').radixTree({ data: [ /* ... */ ] });</code></pre></div>
             </button>
             <div class="faq-answer">Yes! The tree supports ARIA, keyboard navigation (arrows, space, enter, tab), and is
               screen reader friendly.</div>
+          </div>
+          <div class="faq-card">
+            <button class="faq-question" aria-expanded="false">
+              <span class="faq-chevron"><svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <path d="M8 10l4 4 4-4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+                    stroke-linejoin="round" />
+                </svg></span>
+              <span>How do I get only checked parent nodes that are open/closed?</span>
+              <span class="faq-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M10 14L21 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round" />
+                  <path d="M21 3v7m0-7h-7" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round" />
+                </svg></span>
+            </button>
+            <div class="faq-answer">
+              <code>const openChecked = $('.radix-tree').radixTree('getOpenChecked');</code><br>
+              <code>const closedChecked = $('.radix-tree').radixTree('getClosedChecked');</code>
+            </div>
           </div>
         </div>
       </section>

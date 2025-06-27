@@ -392,33 +392,62 @@
 
     const focusMode = settings.focusMode;
     
-    switch (focusMode.type) {
-      case 'accordion':
-        handleAccordionMode(node, settings, idNodeMap, $container);
-        break;
-      case 'highlight':
+    // Support multiple modes: can be string or array
+    const modes = Array.isArray(focusMode.type) ? focusMode.type : [focusMode.type];
+    
+    // Check if we need to re-render (accordion or collapse-siblings)
+    const needsReRender = modes.some(mode => mode === 'accordion' || mode === 'collapse-siblings');
+    
+    // Store the node that should be highlighted after any re-renders
+    if (modes.includes('highlight')) {
+      $container.data('radix-highlighted-node', node._radixId);
+    }
+    
+    // Apply non-highlight modes first
+    modes.forEach(mode => {
+      if (mode !== 'highlight') {
+        switch (mode) {
+          case 'accordion':
+            handleAccordionMode(node, settings, idNodeMap, $container);
+            break;
+          case 'collapse-siblings':
+            handleCollapseSiblingsMode(node, settings, idNodeMap, $container);
+            break;
+          case 'scroll':
+            handleScrollMode(node, settings, idNodeMap, $container);
+            break;
+        }
+      }
+    });
+    
+    // Apply highlight mode last (after any re-renders)
+    if (modes.includes('highlight')) {
+      if (needsReRender) {
+        // If we had a re-render, the highlight will be restored by reRenderTree
+        // No need to apply it here
+      } else {
+        // No re-render needed, apply highlight immediately
         handleHighlightMode(node, settings, idNodeMap, $container);
-        break;
-      case 'collapse-siblings':
-        handleCollapseSiblingsMode(node, settings, idNodeMap, $container);
-        break;
-      case 'scroll':
-        handleScrollMode(node, settings, idNodeMap, $container);
-        break;
+      }
     }
   }
 
   // Accordion mode: only one node open at a time per level
   function handleAccordionMode(node, settings, idNodeMap, $container) {
     const siblings = getSiblingNodes(node, idNodeMap);
+    let hasChanges = false;
+    
     siblings.forEach(sibling => {
       if (sibling.open && sibling !== node) {
         sibling.open = false;
+        hasChanges = true;
       }
     });
     
-    // Re-render to apply changes
-    reRenderTree($container, settings);
+    // Only re-render if we actually closed some nodes
+    if (hasChanges) {
+      reRenderTree($container, settings);
+    }
   }
 
   // Highlight mode: highlight current node, de-emphasize others
@@ -444,14 +473,19 @@
   // Collapse siblings mode: collapse sibling nodes when opening a new one
   function handleCollapseSiblingsMode(node, settings, idNodeMap, $container) {
     const siblings = getSiblingNodes(node, idNodeMap);
+    let hasChanges = false;
+    
     siblings.forEach(sibling => {
       if (sibling.open && sibling !== node) {
         sibling.open = false;
+        hasChanges = true;
       }
     });
     
-    // Re-render to apply changes
-    reRenderTree($container, settings);
+    // Only re-render if we actually closed some nodes
+    if (hasChanges) {
+      reRenderTree($container, settings);
+    }
   }
 
   // Scroll mode: just scroll to the opened node
@@ -465,6 +499,49 @@
     }
   }
 
+  // Helper: restore highlight after re-render
+  function restoreHighlight($container, settings) {
+    const highlightedNodeId = $container.data('radix-highlighted-node');
+    if (highlightedNodeId && settings.focusMode && settings.focusMode.enabled) {
+      const modes = Array.isArray(settings.focusMode.type) ? settings.focusMode.type : [settings.focusMode.type];
+      if (modes.includes('highlight')) {
+        // Wait a bit longer to ensure DOM is fully updated
+        setTimeout(() => {
+          const nodeElement = $container.find(`[data-radix-id="${highlightedNodeId}"]`);
+          if (nodeElement.length) {
+            $container.find('.radix-tree-focused').removeClass('radix-tree-focused');
+            nodeElement.addClass('radix-tree-focused');
+            
+            // Auto-scroll if enabled
+            if (settings.focusMode.autoScroll) {
+              nodeElement[0].scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'nearest' 
+              });
+            }
+          } else {
+            // If element not found, try again after a longer delay
+            setTimeout(() => {
+              const nodeElement = $container.find(`[data-radix-id="${highlightedNodeId}"]`);
+              if (nodeElement.length) {
+                $container.find('.radix-tree-focused').removeClass('radix-tree-focused');
+                nodeElement.addClass('radix-tree-focused');
+                
+                // Auto-scroll if enabled
+                if (settings.focusMode.autoScroll) {
+                  nodeElement[0].scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'nearest' 
+                  });
+                }
+              }
+            }, 100);
+          }
+        }, 50);
+      }
+    }
+  }
+
   // Helper: re-render tree with current settings
   function reRenderTree($container, settings) {
     const idPrefix = $container.data('radixTreeIdPrefix');
@@ -474,6 +551,9 @@
     const $treeWrapper = $('<div class="radix-tree"></div>');
     $treeWrapper.append(renderTree(settings.data, settings.callbacks, null, [], settings, idNodeMap, $container, false, idPrefix, checkboxIdCounter));
     $container.append($treeWrapper);
+    
+    // Restore highlight after re-render
+    restoreHighlight($container, settings);
   }
 
   // Render function with checkboxes, unique ids, keyboard navigation, lazy loading, badges/tags, and infinite scroll
@@ -681,6 +761,9 @@
               $newScrollTree.scrollTop(scrollTop);
             }
           }
+          
+          // Restore highlight after checkbox change re-render
+          restoreHighlight($container, settings);
         }
         // Get sibling nodes for the onCheck callback
         const siblingNodes = getSiblingNodes(node, idNodeMap);
@@ -813,13 +896,15 @@
               const siblings = getSiblingNodes(node, idNodeMap);
               callbacks.onExpand && callbacks.onExpand(node, details, siblings);
               
-              // Handle focus mode
+              // Handle focus mode with a small delay to ensure DOM is updated
               let $container = $(summary).closest('.radix-tree-parent');
               if ($container.length) {
-                const idPrefix = $container.data('radixTreeIdPrefix');
-                const checkboxIdCounter = { val: 0 };
-                const currentIdNodeMap = buildIdNodeMap(settings.data, [], {}, null, idPrefix, checkboxIdCounter);
-                handleFocusMode(node, settings, currentIdNodeMap, $container);
+                setTimeout(() => {
+                  const idPrefix = $container.data('radixTreeIdPrefix');
+                  const checkboxIdCounter = { val: 0 };
+                  const currentIdNodeMap = buildIdNodeMap(settings.data, [], {}, null, idPrefix, checkboxIdCounter);
+                  handleFocusMode(node, settings, currentIdNodeMap, $container);
+                }, 10);
               }
             } else if (wasOpen && !details.open) {
               // Was open, now closed = COLLAPSE
@@ -842,6 +927,9 @@
                 const $treeWrapper = $('<div class="radix-tree"></div>');
                 $treeWrapper.append(renderTree(settings.data, settings.callbacks, null, [], settings, idNodeMap, $container, false, idPrefix, checkboxIdCounter));
                 $container.append($treeWrapper);
+                
+                // Restore highlight after lazy loading re-render
+                restoreHighlight($container, settings);
               }
               settings.lazyLoad(node, function (children, hasMore) {
                 node.children = children;
@@ -857,6 +945,9 @@
                   const $treeWrapper = $('<div class="radix-tree"></div>');
                   $treeWrapper.append(renderTree(settings.data, settings.callbacks, null, [], settings, idNodeMap, $container, false, idPrefix, checkboxIdCounter));
                   $container.append($treeWrapper);
+                  
+                  // Restore highlight after lazy loading completion re-render
+                  restoreHighlight($container, settings);
                 }
               }, {
                 page: 1,
@@ -960,14 +1051,14 @@
       const settings = $container.data('radixTreeSettings');
       if (!settings) return;
       // Build id->node map
-      const idNodeMap = buildIdNodeMap(settings.data);
+      const idPrefix = $container.data('radixTreeIdPrefix');
+      const checkboxIdCounter = { val: 0 };
+      const idNodeMap = buildIdNodeMap(settings.data, [], {}, null, idPrefix, checkboxIdCounter);
       switch (command) {
         case 'getChecked':
           // Return array of checked nodes (with id)
           const checked = [];
           // Rebuild idNodeMap with current settings to ensure IDs match
-          const idPrefix = $container.data('radixTreeIdPrefix');
-          const checkboxIdCounter = { val: 0 };
           const currentIdNodeMap = buildIdNodeMap(settings.data, [], {}, null, idPrefix, checkboxIdCounter);
           
           function collectChecked(nodes) {
@@ -978,6 +1069,46 @@
           }
           collectChecked(settings.data);
           return checked;
+        case 'getOpenChecked':
+          // Return array of checked nodes that are currently open (parent nodes only)
+          const openChecked = [];
+          // Rebuild idNodeMap with current settings to ensure IDs match
+          const currentIdNodeMap2 = buildIdNodeMap(settings.data, [], {}, null, idPrefix, checkboxIdCounter);
+          
+          function collectOpenChecked(nodes) {
+            nodes.forEach(node => {
+              // Only include checked nodes that are open (have children and are expanded)
+              if (node.checked && node.open && node.children && node.children.length > 0) {
+                openChecked.push({ id: node._radixId, label: node.label, node });
+              }
+              // Continue traversing children if node is open
+              if (node.open && node.children) {
+                collectOpenChecked(node.children);
+              }
+            });
+          }
+          collectOpenChecked(settings.data);
+          return openChecked;
+        case 'getClosedChecked':
+          // Return array of checked nodes that are currently closed (parent nodes only)
+          const closedChecked = [];
+          // Rebuild idNodeMap with current settings to ensure IDs match
+          const currentIdNodeMap3 = buildIdNodeMap(settings.data, [], {}, null, idPrefix, checkboxIdCounter);
+          
+          function collectClosedChecked(nodes) {
+            nodes.forEach(node => {
+              // Only include checked nodes that are closed (have children but are collapsed)
+              if (node.checked && !node.open && node.children && node.children.length > 0) {
+                closedChecked.push({ id: node._radixId, label: node.label, node });
+              }
+              // Continue traversing children if node is open
+              if (node.open && node.children) {
+                collectClosedChecked(node.children);
+              }
+            });
+          }
+          collectClosedChecked(settings.data);
+          return closedChecked;
         case 'setChecked': {
           const [id, checkedVal] = args;
           // Build idNodeMap first
@@ -1009,14 +1140,28 @@
           const [id] = args;
           const node = idNodeMap[id];
           if (node) {
+            const wasOpen = node.open;
             node.open = true;
+            
+            // Trigger onExpand callback if node was not previously open
+            if (!wasOpen && settings.callbacks.onExpand) {
+              const siblings = getSiblingNodes(node, idNodeMap);
+              settings.callbacks.onExpand(node, { open: true }, siblings);
+            }
+            
+            // Handle focus mode if enabled
+            if (settings.focusMode && settings.focusMode.enabled) {
+              handleFocusMode(node, settings, idNodeMap, $container);
+            }
+            
             $container.empty();
-            const idPrefix = $container.data('radixTreeIdPrefix');
-            const checkboxIdCounter = { val: 0 };
-            const idNodeMap = buildIdNodeMap(settings.data, [], {}, null, idPrefix, checkboxIdCounter);
+            const newIdNodeMap = buildIdNodeMap(settings.data, [], {}, null, idPrefix, checkboxIdCounter);
             const $treeWrapper = $('<div class="radix-tree"></div>');
-            $treeWrapper.append(renderTree(settings.data, settings.callbacks, null, [], settings, idNodeMap, $container, false, idPrefix, checkboxIdCounter));
+            $treeWrapper.append(renderTree(settings.data, settings.callbacks, null, [], settings, newIdNodeMap, $container, false, idPrefix, checkboxIdCounter));
             $container.append($treeWrapper);
+            
+            // Restore highlight after re-render
+            restoreHighlight($container, settings);
           }
           return;
         }
@@ -1024,13 +1169,19 @@
           const [id] = args;
           const node = idNodeMap[id];
           if (node) {
+            const wasOpen = node.open;
             node.open = false;
+            
+            // Trigger onCollapse callback if node was previously open
+            if (wasOpen && settings.callbacks.onCollapse) {
+              const siblings = getSiblingNodes(node, idNodeMap);
+              settings.callbacks.onCollapse(node, { open: false }, siblings);
+            }
+            
             $container.empty();
-            const idPrefix = $container.data('radixTreeIdPrefix');
-            const checkboxIdCounter = { val: 0 };
-            const idNodeMap = buildIdNodeMap(settings.data, [], {}, null, idPrefix, checkboxIdCounter);
+            const newIdNodeMap = buildIdNodeMap(settings.data, [], {}, null, idPrefix, checkboxIdCounter);
             const $treeWrapper = $('<div class="radix-tree"></div>');
-            $treeWrapper.append(renderTree(settings.data, settings.callbacks, null, [], settings, idNodeMap, $container, false, idPrefix, checkboxIdCounter));
+            $treeWrapper.append(renderTree(settings.data, settings.callbacks, null, [], settings, newIdNodeMap, $container, false, idPrefix, checkboxIdCounter));
             $container.append($treeWrapper);
           }
           return;
@@ -1041,19 +1192,15 @@
           const [newData] = args;
           settings.data = newData;
           $container.empty();
-          const idPrefix = $container.data('radixTreeIdPrefix');
-          const checkboxIdCounter = { val: 0 };
-          const idNodeMap = buildIdNodeMap(settings.data, [], {}, null, idPrefix, checkboxIdCounter);
+          const newIdNodeMap = buildIdNodeMap(settings.data, [], {}, null, idPrefix, checkboxIdCounter);
           const $treeWrapper = $('<div class="radix-tree"></div>');
-          $treeWrapper.append(renderTree(settings.data, settings.callbacks, null, [], settings, idNodeMap, $container, false, idPrefix, checkboxIdCounter));
+          $treeWrapper.append(renderTree(settings.data, settings.callbacks, null, [], settings, newIdNodeMap, $container, false, idPrefix, checkboxIdCounter));
           $container.append($treeWrapper);
           return;
         }
         case 'getSiblings': {
           const [nodeId] = args;
           // Rebuild idNodeMap with current settings to ensure IDs match
-          const idPrefix = $container.data('radixTreeIdPrefix');
-          const checkboxIdCounter = { val: 0 };
           const currentIdNodeMap = buildIdNodeMap(settings.data, [], {}, null, idPrefix, checkboxIdCounter);
           const node = currentIdNodeMap[nodeId];
           if (node) {

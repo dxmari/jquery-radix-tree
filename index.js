@@ -497,7 +497,7 @@ $(function () {
     ],
     focusMode: {
       enabled: true,
-      type: 'highlight',
+      type: ['highlight', 'accordion'],
       autoScroll: true,
       highlightColor: '#4caf50',
       animationDuration: 300,

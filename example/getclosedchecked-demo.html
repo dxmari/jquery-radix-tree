@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>getClosedChecked Command Demo - jQuery Radix Tree</title>
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        .demo-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #f9f9f9;
+        }
+        .result-box {
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .button-group {
+            margin: 10px 0;
+        }
+        .button-group button {
+            margin-right: 10px;
+            padding: 8px 16px;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .button-group button:hover {
+            background: #45a049;
+        }
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .comparison-item {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            background: #fff;
+        }
+        .comparison-item h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        .status-open {
+            background: #4caf50;
+        }
+        .status-closed {
+            background: #ff9800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>getClosedChecked Command Demo</h1>
+        <p>This demo showcases the new <code>getClosedChecked</code> command that returns only checked parent nodes that are currently closed (collapsed), excluding their children.</p>
+        
+        <div class="demo-section">
+            <h2>Tree Structure</h2>
+            <div id="tree-container"></div>
+        </div>
+
+        <div class="demo-section">
+            <h2>Command Comparison</h2>
+            <div class="comparison">
+                <div class="comparison-item">
+                    <h3>getChecked() - All Checked Items</h3>
+                    <p>Returns all checked nodes including children</p>
+                    <div class="button-group">
+                        <button onclick="getAllChecked()">Get All Checked</button>
+                    </div>
+                    <div id="all-checked-result" class="result-box"></div>
+                </div>
+                
+                <div class="comparison-item">
+                    <h3>getOpenChecked() - Open Parent Items Only</h3>
+                    <p>Returns only checked parent nodes that are currently open</p>
+                    <div class="button-group">
+                        <button onclick="getOpenChecked()">Get Open Checked</button>
+                    </div>
+                    <div id="open-checked-result" class="result-box"></div>
+                </div>
+
+                <div class="comparison-item">
+                    <h3>getClosedChecked() - Closed Parent Items Only</h3>
+                    <p>Returns only checked parent nodes that are currently closed</p>
+                    <div class="button-group">
+                        <button onclick="getClosedChecked()">Get Closed Checked</button>
+                    </div>
+                    <div id="closed-checked-result" class="result-box"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>Instructions</h2>
+            <ol>
+                <li>Expand and collapse some parent nodes in the tree</li>
+                <li>Check some parent nodes and their children</li>
+                <li>Click the buttons to see the different results</li>
+                <li>Notice the differences:
+                    <ul>
+                        <li><span class="status-indicator status-open"></span><strong>getChecked:</strong> All checked items (parents + children)</li>
+                        <li><span class="status-indicator status-open"></span><strong>getOpenChecked:</strong> Only checked parents that are expanded</li>
+                        <li><span class="status-indicator status-closed"></span><strong>getClosedChecked:</strong> Only checked parents that are collapsed</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+
+        <div class="demo-section">
+            <h2>Use Cases for getClosedChecked</h2>
+            <ul>
+                <li><strong>Batch Processing:</strong> Process all selected categories that are currently collapsed</li>
+                <li><strong>Data Export:</strong> Export only the collapsed parent selections</li>
+                <li><strong>UI State Management:</strong> Track which collapsed categories are selected</li>
+                <li><strong>Selective Operations:</strong> Perform actions only on collapsed parent nodes</li>
+                <li><strong>Memory Management:</strong> Work with selected items that don't have their children loaded</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="../tree.js"></script>
+    <script>
+        // Sample data with nested structure
+        const treeData = [
+            {
+                label: 'Technology',
+                checked: false,
+                open: true,
+                children: [
+                    {
+                        label: 'Programming Languages',
+                        checked: false,
+                        open: false,
+                        children: [
+                            { label: 'JavaScript', checked: false },
+                            { label: 'Python', checked: false },
+                            { label: 'Java', checked: false },
+                            { label: 'C++', checked: false }
+                        ]
+                    },
+                    {
+                        label: 'Frameworks',
+                        checked: false,
+                        open: false,
+                        children: [
+                            { label: 'React', checked: false },
+                            { label: 'Vue.js', checked: false },
+                            { label: 'Angular', checked: false },
+                            { label: 'Django', checked: false }
+                        ]
+                    },
+                    {
+                        label: 'Databases',
+                        checked: false,
+                        open: false,
+                        children: [
+                            { label: 'MySQL', checked: false },
+                            { label: 'PostgreSQL', checked: false },
+                            { label: 'MongoDB', checked: false },
+                            { label: 'Redis', checked: false }
+                        ]
+                    }
+                ]
+            },
+            {
+                label: 'Science',
+                checked: false,
+                open: false,
+                children: [
+                    {
+                        label: 'Physics',
+                        checked: false,
+                        open: false,
+                        children: [
+                            { label: 'Quantum Mechanics', checked: false },
+                            { label: 'Relativity', checked: false },
+                            { label: 'Thermodynamics', checked: false }
+                        ]
+                    },
+                    {
+                        label: 'Chemistry',
+                        checked: false,
+                        open: false,
+                        children: [
+                            { label: 'Organic Chemistry', checked: false },
+                            { label: 'Inorganic Chemistry', checked: false },
+                            { label: 'Biochemistry', checked: false }
+                        ]
+                    }
+                ]
+            },
+            {
+                label: 'Arts',
+                checked: false,
+                open: false,
+                children: [
+                    {
+                        label: 'Visual Arts',
+                        checked: false,
+                        open: false,
+                        children: [
+                            { label: 'Painting', checked: false },
+                            { label: 'Sculpture', checked: false },
+                            { label: 'Photography', checked: false }
+                        ]
+                    },
+                    {
+                        label: 'Performing Arts',
+                        checked: false,
+                        open: false,
+                        children: [
+                            { label: 'Theater', checked: false },
+                            { label: 'Music', checked: false },
+                            { label: 'Dance', checked: false }
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        // Initialize the tree
+        $('#tree-container').radixTree({
+            data: treeData,
+            onCheck: function(node, checked) {
+                console.log('Node checked:', node.label, checked);
+            }
+        });
+
+        function getAllChecked() {
+            const checked = $('#tree-container').radixTree('getChecked');
+            const result = checked.map(item => ({
+                id: item.id,
+                label: item.label,
+                hasChildren: item.node.children && item.node.children.length > 0,
+                isOpen: item.node.open,
+                status: item.node.open ? 'Open' : 'Closed'
+            }));
+            
+            document.getElementById('all-checked-result').innerHTML = 
+                JSON.stringify(result, null, 2);
+        }
+
+        function getOpenChecked() {
+            const openChecked = $('#tree-container').radixTree('getOpenChecked');
+            const result = openChecked.map(item => ({
+                id: item.id,
+                label: item.label,
+                hasChildren: item.node.children && item.node.children.length > 0,
+                isOpen: item.node.open,
+                childCount: item.node.children ? item.node.children.length : 0
+            }));
+            
+            document.getElementById('open-checked-result').innerHTML = 
+                JSON.stringify(result, null, 2);
+        }
+
+        function getClosedChecked() {
+            const closedChecked = $('#tree-container').radixTree('getClosedChecked');
+            const result = closedChecked.map(item => ({
+                id: item.id,
+                label: item.label,
+                hasChildren: item.node.children && item.node.children.length > 0,
+                isOpen: item.node.open,
+                childCount: item.node.children ? item.node.children.length : 0
+            }));
+            
+            document.getElementById('closed-checked-result').innerHTML = 
+                JSON.stringify(result, null, 2);
+        }
+
+        // Auto-update results when tree changes
+        $('#tree-container').on('change', 'input[type="checkbox"]', function() {
+            setTimeout(() => {
+                getAllChecked();
+                getOpenChecked();
+                getClosedChecked();
+            }, 100);
+        });
+
+        // Initial load
+        getAllChecked();
+        getOpenChecked();
+        getClosedChecked();
+    </script>
+</body>
+</html> 

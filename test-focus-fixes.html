@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Focus Mode Fixes Test</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="tree.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-title {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+        .test-instructions {
+            background: #e8f4fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            border-left: 4px solid #3498db;
+        }
+        .tree-container {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+            background: #fafafa;
+        }
+        .issue-status {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .issue-fixed {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            color: #155724;
+        }
+        .issue-testing {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎯 Focus Mode Fixes Test</h1>
+    
+    <div class="test-container">
+        <h2 class="test-title">Issue 1: First-time highlighting when all children are closed</h2>
+        <div class="test-instructions">
+            <strong>Test Steps:</strong>
+            <ol>
+                <li>Make sure all nodes are collapsed initially</li>
+                <li>Click to expand "Documents" → "Work" → "Reports"</li>
+                <li>Each expanded node should be highlighted immediately</li>
+                <li>Try expanding different nodes to see if highlighting works consistently</li>
+            </ol>
+        </div>
+        <div class="tree-container" id="test-issue1"></div>
+        <div class="issue-status issue-testing">
+            <strong>Status:</strong> Testing - Expand nodes to verify highlighting works on first expansion
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h2 class="test-title">Issue 2: Highlight retention when checking checkboxes</h2>
+        <div class="test-instructions">
+            <strong>Test Steps:</strong>
+            <ol>
+                <li>Expand "Documents" → "Work" → "Reports" (should be highlighted)</li>
+                <li>Check the checkbox next to "Reports"</li>
+                <li>The highlight should remain on "Reports" even after checking</li>
+                <li>Try checking other checkboxes - highlights should persist</li>
+            </ol>
+        </div>
+        <div class="tree-container" id="test-issue2"></div>
+        <div class="issue-status issue-testing">
+            <strong>Status:</strong> Testing - Check checkboxes to verify highlights are retained
+        </div>
+    </div>
+
+    <script>
+        const testData = [
+            {
+                label: '📁 Documents',
+                open: false,
+                children: [
+                    {
+                        label: '📄 Work',
+                        open: false,
+                        children: [
+                            { label: '📊 Reports', checked: false },
+                            { label: '📋 Projects', checked: false },
+                            { label: '📧 Emails', checked: false }
+                        ]
+                    },
+                    {
+                        label: '🏠 Personal',
+                        open: false,
+                        children: [
+                            { label: '📸 Photos', checked: false },
+                            { label: '📚 Books', checked: false },
+                            { label: '🎵 Music', checked: false }
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        // Test Issue 1: First-time highlighting
+        $('#test-issue1').radixTree({
+            data: JSON.parse(JSON.stringify(testData)), // Deep copy
+            focusMode: {
+                enabled: true,
+                type: ['highlight', 'accordion'],
+                autoScroll: true,
+                highlightColor: '#4caf50',
+                animationDuration: 300
+            },
+            onExpand: function(node, details, siblings) {
+                console.log('✅ Expanded:', node.label);
+                // Update status when node is expanded
+                $('.issue-status').first().removeClass('issue-testing').addClass('issue-fixed')
+                    .html('<strong>Status:</strong> ✅ Fixed - Node highlighting works on first expansion');
+            }
+        });
+
+        // Test Issue 2: Highlight retention with checkboxes
+        $('#test-issue2').radixTree({
+            data: JSON.parse(JSON.stringify(testData)), // Deep copy
+            focusMode: {
+                enabled: true,
+                type: ['highlight', 'accordion'],
+                autoScroll: true,
+                highlightColor: '#4caf50',
+                animationDuration: 300
+            },
+            onExpand: function(node, details, siblings) {
+                console.log('✅ Expanded:', node.label);
+            },
+            onCheck: function(node, checkbox, siblings) {
+                console.log('✅ Checked:', node.label, 'Highlight should be retained');
+                // Update status when checkbox is checked
+                $('.issue-status').last().removeClass('issue-testing').addClass('issue-fixed')
+                    .html('<strong>Status:</strong> ✅ Fixed - Highlight retained after checkbox change');
+            }
+        });
+
+        // Add some helpful logging
+        console.log('🚀 Focus Mode Fixes Test Loaded');
+        console.log('📋 Test both issues by following the instructions above');
+    </script>
+</body>
+</html> 

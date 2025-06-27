@@ -39,6 +39,7 @@ Perfect for dashboards, data explorers, and any UI that needs a dynamic, hierarc
 - [Accessibility](#accessibility)
 - [Contributing](#contributing)
 - [Who's Using Radix Tree?](#whos-using-radix-tree)
+- [Recent Improvements (v1.0.2)](#recent-improvements-v102)
 
 ---
 
@@ -72,6 +73,7 @@ You can also experiment with different data and features by editing `index.js`.
 - **Employee Directory:** `example/lazyload-example2.html` - Multi-level org structure with lazy loading
 - **GitHub Integration:** `example/lazyload-github.html` - Real API integration example
 - **Focus Mode Demo:** `example/focus-mode-demo.html` - Interactive focus mode examples
+- **Multiple Focus Modes:** `example/multiple-focus-modes-demo.html` - Combine multiple focus modes
 - **NodeId Demo:** `example/nodeid-demo.html` - Database integration with nodeId
 
 ---
@@ -269,7 +271,9 @@ $('.radix-tree').radixTree({
   data: myData,
   focusMode: {
     enabled: true,
-    type: 'highlight', // 'accordion', 'highlight', 'collapse-siblings', 'scroll'
+    type: 'highlight', // Single mode: 'accordion', 'highlight', 'collapse-siblings', 'scroll'
+    // OR multiple modes:
+    // type: ['highlight', 'accordion'], // Combine multiple modes
     autoScroll: true,
     highlightColor: '#4caf50',
     animationDuration: 300,
@@ -278,6 +282,32 @@ $('.radix-tree').radixTree({
   }
 });
 ```
+
+#### Single Mode vs Multiple Modes
+
+**Single Mode (Default):**
+```js
+focusMode: {
+  enabled: true,
+  type: 'highlight'
+}
+```
+
+**Multiple Modes (Enhanced):**
+```js
+focusMode: {
+  enabled: true,
+  type: ['highlight', 'accordion'] // Apply both modes simultaneously
+}
+```
+
+**Available Mode Combinations:**
+- `['highlight', 'accordion']` - Highlight current node while keeping only one open per level
+- `['highlight', 'collapse-siblings']` - Highlight current node while collapsing siblings
+- `['accordion', 'scroll']` - Accordion behavior with auto-scroll
+- `['highlight', 'accordion', 'scroll']` - All three modes combined
+
+**Note:** When combining modes, highlight is applied last to ensure it persists through any re-renders from other modes.
 
 #### Focus Mode Types
 
@@ -375,15 +405,18 @@ $('.radix-tree').radixTree({
   data: treeData,
   focusMode: {
     enabled: true,
-    type: 'highlight',
+    type: ['highlight', 'accordion'], // Single mode: 'highlight' or multiple modes: ['highlight', 'accordion']
     autoScroll: true,
-    highlightColor: '#2196f3',
-    animationDuration: 400,
+    highlightColor: '#4caf50',
+    animationDuration: 300,
     preserveRoot: true,
-    maxOpenLevels: 3
+    maxOpenLevels: 2
   },
   onExpand: function(node, details, siblings) {
     console.log('Focused on:', node.label);
+  },
+  onCollapse: function(node, details, siblings) {
+    console.log('Collapsed:', node.label);
   }
 });
 ```
@@ -544,6 +577,12 @@ Interact with the tree after initialization:
 ```js
 // Get all checked nodes
 const checked = $('.radix-tree').radixTree('getChecked');
+
+// Get only checked parent nodes that are currently open
+const openChecked = $('.radix-tree').radixTree('getOpenChecked');
+
+// Get only checked parent nodes that are currently closed
+const closedChecked = $('.radix-tree').radixTree('getClosedChecked');
 
 // Set a node as checked/unchecked
 $('.radix-tree').radixTree('setChecked', nodeId, true);   // Check
@@ -844,3 +883,59 @@ For questions or contributions, open an issue or PR on GitHub.
 > "Radix Tree has been a game-changer for our UI development. The plugin's intuitive API and responsive design enabled us to deliver a polished, user-friendly experience to our clients. We especially appreciate the attention to detail in handling large datasets and multiple instances. Support from the maintainers has been prompt and helpful. It's now our go-to solution for tree structures."
 >
 > — [effy](https://www.effy.co.in/), Gopi, Engineering Manager
+
+---
+
+## Recent Improvements (v1.0.2)
+
+### 🆔 NodeId Support for Database Integration
+
+Based on user feedback, we've added a new `nodeId` property for database-friendly identifiers:
+
+```js
+{
+  label: 'John Doe',        // Display text
+  nodeId: 'user_123',       // Database-friendly ID
+  checked: true
+}
+```
+
+**Perfect for PHP/Backend Integration:**
+```js
+// Frontend - Get checked nodes with database IDs
+const checked = $('#tree').radixTree('getChecked');
+const nodeIds = checked.map(n => n.nodeId);
+// Result: ['user_123', 'user_456', ...]
+
+// PHP Backend
+$checkedNodeIds = $_POST['checked_nodes'];
+$query = "SELECT * FROM users WHERE id IN (" . implode(',', $checkedNodeIds) . ")";
+```
+
+**Priority System:**
+1. `nodeId` - Database-friendly identifier (recommended)
+2. `id` - Legacy identifier (backward compatibility)
+3. Auto-generated - Internal radix tree ID
+
+### 🧹 Simplified Default Data
+
+Removed complex 5+ level default data. Now starts with a simple, clean structure:
+```js
+const defaultData = [
+  {
+    label: 'Root',
+    open: true,
+    checked: false
+  }
+];
+```
+
+### 🎯 Focus Mode Feature
+
+Added configurable focus modes for better user experience:
+- **Accordion Mode**: Only one node open at a time
+- **Highlight Mode**: Visual focus with auto-scroll
+- **Collapse Siblings**: Auto-collapse sibling nodes
+- **Auto-Scroll Mode**: Smooth scrolling to opened nodes
+
+See `example/focus-mode-demo.html` for interactive examples.
